@@ -20,11 +20,12 @@ QUOTE_STATE_NEW = 'new' #is the default on the DB column
 QUOTE_STATE_ACCEPTED = 'accepted'
 QUOTE_STATE_REJECTED = 'rejected'
 
+
 def listGroups(request, *args):
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
     #We ignore the auth result here, because we want pages to be able to use listGroups when not authed (i.e. Make an Inquiry)
     #if auth_result is not True:
     #    return auth_response
@@ -130,11 +131,11 @@ def _findAdminOrNodeRepEmailTarget(groupname = 'Administrators'): #TODO use MADA
 def sendRequest(request, *args):
     print '***quote: sendRequest***'
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
-    if auth_result is not True:
-        return auth_response
+    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
 
     print '\tgetting args'
@@ -231,7 +232,7 @@ def listQuotes(request, *args):
        Accessible by Administrators, Node Reps and Clients but it filters down to just Client's quote requests if it is a Client
     '''
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from madas.settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS 
 #    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
 #    if auth_result is not True:
@@ -298,11 +299,11 @@ def listAll(request, *args):
        Accessible by Administrators, Node Reps
     '''
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from madas.settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS 
-    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     print '*** quote/listAll - enter ***'
     ld = LDAPHandler()
@@ -372,10 +373,10 @@ def listFormal(request, *args, **kwargs):
     '''
     print '*** listFormal : enter ***'
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     
     uname = request.user.username
@@ -621,11 +622,11 @@ def formalLoad(request, *args, **kwargs):
                 e = ld.ldap_get_user_details(retvals['toemail'])
                 if len(e) > 0:
                     ### Authorisation Check ### we do this here because we need to allow auth if the request is for a formal quote sent to an unregistered user
-                    from madas.quote.views import authorize
+                    #from madas.quote.views import authorize
                     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-                    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
-                    if auth_result is not True:
-                        return auth_response
+                    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
+                    #if auth_result is not True:
+                    #    return auth_response
                     ### End Authorisation Check ###  
 
             else:
@@ -685,11 +686,11 @@ def formalSave(request, *args):
     '''Called when the user clicks the 'Send Formal Quote' button'''
     print '***formalSave : enter ***'
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     qid = request.REQUEST.get('quoterequestid', 'wasnt there')
     email = request.user.username
@@ -801,12 +802,14 @@ def formalAccept(request, *args):
         #TODO: this section needs some help - can edit arbitrary user details via this form...
         u = request.REQUEST.get('email')
         
-        from madas.quote.views import authorize
+        #from madas.quote.views import authorize
         from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-        (auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
-        if auth_result is not True:  #allow node reps to accept quotes but not edit the user details
-            from madas.users.views import _usersave
-            _usersave(request, u)
+        #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True, perms=MADAS_ADMIN_GROUPS)
+        
+        #TODO: when removing authorize, this part has now been commented out
+        #if auth_result is not True:  #allow node reps to accept quotes but not edit the user details
+        #    from madas.users.views import _usersave
+        #    _usersave(request, u)
 
         #and then...
         #mark the formal quote as accepted:
@@ -943,9 +946,12 @@ def check_default(request):
     return True
 
 def login(request, *args):
+    print "LOGIN!!!!!!!!!!!1"
     success = processLogin(request, args)
-    return HttpResponseRedirect(siteurl(request)) 
+    return jsonResponse(request, []); 
+    #return HttpResponseRedirect(siteurl(request)) 
 
+'''
 def authorize(request, module='/', perms = [], internal = False):
     print '*** authorize : enter ***'
 
@@ -1096,7 +1102,7 @@ def authorize(request, module='/', perms = [], internal = False):
         return jsonResponse(request, []) 
     else:
         return (aa, jsonResponse(request, []) )  
-
+'''
 from django.template import Context, loader
 
 def redirectMain(request, *args, **kwargs):
@@ -1120,6 +1126,7 @@ def redirectMain(request, *args, **kwargs):
     return HttpResponseRedirect(siteurl(request))
     
 def serveIndex(request, *args, **kwargs):
+    '''
     for k in kwargs:
         print '%s : %s' % (k, kwargs[k])
     #so the 'cruft' key will contain a string.
@@ -1160,7 +1167,8 @@ def serveIndex(request, *args, **kwargs):
             return redirectMain(request, module = modname, submodule = funcname, params = params)
         else:
             params = request.session.get('params', '')
-
+    '''
+    params = request.session.get('params', '')
     print 'serve index...' 
     #print settings.APP_SECURE_URL
     #print request.username
@@ -1178,7 +1186,6 @@ def serveIndex(request, *args, **kwargs):
     mcf = request.session.get('redirectMainContentFunction')
     if mcf is None: mcf = 'dashboard'
     request.session['redirectMainContentFunction'] = None
-    
     return render_mako('index.mako', 
                         APP_SECURE_URL = siteurl(request),#settings.APP_SECURE_URL,
                         username = request.user.username,
@@ -1186,7 +1193,6 @@ def serveIndex(request, *args, **kwargs):
                         wh = webhelpers,
                         params = sendparams # params[1] #None #['quote:viewformal', {'qid': 83}]
                       )
-
 def serverinfo(request):
     return render_mako('serverinfo.mako', s=settings, request=request, g=globals() )
 

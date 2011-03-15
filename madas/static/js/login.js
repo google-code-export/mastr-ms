@@ -15,6 +15,34 @@
  * along with Madas.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+MA.ResetUser = function()
+{
+    MA.user = {
+    IsAdmin: false,
+    IsNodeRep: false,
+    IsClient: false,
+    IsLoggedIn: false,
+    Username: ""};
+}
+
+Ext.Ajax.on('requestexception', function(conn, response, options, e)
+{
+    if (response.status == 401)
+    {
+        console.log("GLOBAL XHR error handler: Unauthenticated. Resetting user.");
+        MA.ResetUser();
+    }
+    else if (response.status == 403)
+    {
+        console.log("GLOBAL XHR error handler: Unauthorised. Resetting user.");
+        MA.ResetUser();
+    }
+    else
+    {
+        console.log("GLOBAL XHR error handler: Uncaught response (" + response.status + ")");
+    }
+});
+
 MA.LoginExecute = function(paramArray){
                             Ext.getCmp('login-panel').getForm().submit(
                                 {   successProperty: 'success',        
@@ -22,7 +50,7 @@ MA.LoginExecute = function(paramArray){
                                         var resultContent;
                                         var params;
                                         if (action.result.success === true) {
-                                            //Ext.Msg.alert ('Result: ' + action.result.toString())
+                                            console.log("Login Execute: "  + action.result.toString());
                                             form.reset(); 
                                             //load up the menu and next content area as declared in response
                                             if (action.result.username) {
@@ -167,7 +195,7 @@ MA.Authorize = function(requestedView, params) {
     if (requestedView === 'notauthorized') {
         return MA.ChangeMainContent(requestedView, params);
     }
-    
+    console.log("Called Authorize");
     //the module we need to auth against is the first part of the requestedView
     //ie admin/adminrequest
     //we authorize against admin/authorize
@@ -178,7 +206,7 @@ MA.Authorize = function(requestedView, params) {
     if (viewSplit.length > 1) {
         action = viewSplit[1];
     }
-
+    /*
     //submit form
     var simple = new Ext.BasicForm('hiddenForm', {
         url:MA.BaseUrl + module+'/authorize',
@@ -204,7 +232,11 @@ MA.Authorize = function(requestedView, params) {
                 MA.IsLoggedIn = false;
                 Ext.getCmp('userMenu').setText('User: none');
             }
-            MA.ChangeMainContent(action.result.mainContentFunction, action.result.params);
+            */
+            //MA.ChangeMainContent(action.result.mainContentFunction, action.result.params);
+            
+            MA.ChangeMainContent(requestedView, params);
+        /*
         },
         failure: function (form, action) {
             //load up the menu and next content area as declared in response
@@ -214,8 +246,8 @@ MA.Authorize = function(requestedView, params) {
     };
 
     simple.submit(submitOptions);
+    */
 };
-
 
 MA.LoginInit = function(paramArray) {
     

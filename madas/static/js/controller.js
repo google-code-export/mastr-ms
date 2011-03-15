@@ -25,14 +25,13 @@
  * situations where a page displays but the content fails
  */
 MA.ChangeMainContent = function(contentName, paramArray){
-
     //Ext.get('center').dom.innerHTML = '';
     var showMenu = true;
     var affectMenu = true;
     var cancelBackTarget = true; //whether or not this action should be invoked if a user clicks Cancel (where the variable is obeyed)
 
     Ext.QuickTips.init();
-    //alert('called ChangeMainContent, contentName was: ' + contentName);
+    alert('called ChangeMainContent, contentName was: ' + contentName);
     
     switch (contentName) {
     
@@ -260,6 +259,7 @@ MA.ChangeMainContent = function(contentName, paramArray){
  * initializes the main application interface and any required variables
  */
 MA.InitApplication = function(appSecureUrl, username, mainContentFunction, params) {
+   console.log("InitApplication was run");
    //various global settings for Ext
     Ext.BLANK_IMAGE_URL = appSecureUrl + 'static/ext-3.3.0/resources/images/default/s.gif';
    Ext.QuickTips.init();
@@ -317,7 +317,7 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
         removeMask: true
     });
    
-    MA.Authorize(mainContentFunction, paramArray);
+    //MA.Authorize(mainContentFunction, paramArray);
 };
 
 
@@ -337,11 +337,15 @@ MA.AjaxMetadataProcess = function(ajaxData) {
    //look for specific sentinel values in the json
    //var authenticated = ajaxData.response.value.authenticated;
    //var authorized = ajaxData.response.value.authorized;
-
+    alert("Metadata");
+    console.log('AjaxMetadataProcess is returning true');
+    return true;
     var authenticated = ajaxData.authenticated;
     var authorized = ajaxData.authorized;
 
+
    if (authenticated != 1) {
+        console.log("ajax nmeta");
         //trigger the login page
         MA.IsLoggedIn = false;
         MA.IsAdmin = false;
