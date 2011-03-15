@@ -167,6 +167,33 @@ MA.ChangeMainContent = function(contentName, paramArray){
         	Ext.getCmp('center-panel').layout.setActiveItem('fquolist-panel');
         	break;
 
+        case "project:list":
+            projectsListStore.load();
+            Ext.getCmp('center-panel').layout.setActiveItem('projects-list');
+            break;
+
+        case 'project:new':
+            MA.currentProjectId = 0;
+            var titlefield = Ext.getCmp('projectTitle');
+            var desc = Ext.getCmp('projectDescription');
+
+            titlefield.setValue('');
+            desc.setValue('');
+
+            experimentListStore.removeAll();
+            Ext.getCmp('project-experiment-list').disable();
+            Ext.getCmp('center-panel').layout.setActiveItem('projectCmpTitle');
+            break;
+
+        case 'project:view':
+            Ext.getCmp('center-panel').layout.setActiveItem('projectCmpTitle');
+            Ext.getCmp('project-experiment-list').enable();
+            break;
+
+        case 'experiment:new':
+            MA.ExperimentController.createExperiment();
+            break;
+
     	case "help:screencasts-quoterequest":
     	    MA.ScreencastsInit('madas_requesting_quote.flv');
     	    Ext.getCmp('center-panel').layout.setActiveItem('screencasts-container-panel');
@@ -244,6 +271,8 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
    // turn on validation errors beside the field globally
    Ext.form.Field.prototype.msgTarget = 'side';
 
+   Ext.currentExperimentNavItem = 0;
+
    //the ViewPort defines the main layout for the entire Madas app
    //the center-panel component is the main area where content is switched in and out
    
@@ -270,6 +299,8 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
                         MA.UserEditCmp, MA.ForgotPasswordCmp, MA.ResetPasswordCmp, MA.NodeManagementCmp,
                         MA.OrgManagementCmp,
                         MA.RequestQuoteCmp, MA.QuoteRequestEditCmp, MA.ViewFormalCmp,
+                        MA.ExperimentCmp,
+                        MA.ProjectListCmp, MA.ProjectCmp, 
                         MA.ScreencastsCmp]
             }
             ]
@@ -281,6 +312,10 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
     if (params) {
         paramArray = params; //eval is evil
     }
+
+    MA.ExperimentController.mask = new Ext.LoadMask("center-panel", {
+        removeMask: true
+    });
    
     MA.Authorize(mainContentFunction, paramArray);
 };

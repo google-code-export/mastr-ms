@@ -10,7 +10,7 @@ from madas.quote import admin as madasadmin
 
 urlpatterns = patterns('',
 
-#    (r'^(.*)/authorize', 'madas.madas.views.authorize'),
+    (r'^(.*)/authorize', 'madas.quote.views.authorize'),
 #    (r'^(.*)/index', 'madas.madas.views.serveIndex'),
     (r'^status/', status_view),
     (r'^sync/', include('madas.mdatasync_server.urls')),

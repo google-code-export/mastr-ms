@@ -30,6 +30,14 @@ MA.MenuRender = function(username) {
                     ]
                     }
                 },
+                { xtype: 'tbbutton', text:'Repository', id:'repo', menu:{
+                    items: [
+                        {text:'Projects', id:'project:list', handler: MA.MenuHandler},
+                        {text:'Clients', id:'client:list', handler: MA.MenuHandler},
+                        {text:'Runs', id:'run:list', handler: MA.MenuHandler},
+                    ]
+                    }
+                },
                 { xtype: 'tbbutton', text:'Help', menu:{
                     items: [
                             {text:'Screencasts', id:'help:screencasts', menu: {
@@ -102,6 +110,7 @@ MA.MenuShow = function() {
     Ext.getCmp('quote:list').show();
     Ext.getCmp('quote:listAll').show();
     Ext.getCmp('quote:listFormal').show();
+    Ext.get('repo').show();
 
 }
 
@@ -127,6 +136,7 @@ MA.MenuHide = function() {
     Ext.getCmp('quote:list').hide();
     Ext.getCmp('quote:listAll').hide();
     Ext.getCmp('quote:listFormal').hide();
+    Ext.get('repo').hide();
     Ext.getCmp('helpadmin:screencasts').disable();
 }
 
