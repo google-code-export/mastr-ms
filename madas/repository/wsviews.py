@@ -441,19 +441,22 @@ def recordsClientList(request):
     for row in rows:
         import madas.users 
         from madas.users.views import _userload, getNodeMemberships
-        muser = _userload(row.username)
-        muser['isClient'] = False
-        if muser.has_key('groups'):
-            g = muser['groups']
-            print 'u has groups? len '+str(len(g))
-            nm = getNodeMemberships(g)
-            if len(nm) == 0:
-                print 'is client, yo'
-                muser['isClient'] = True
-        else:
-            print 'd has no groups, fool!'
-        if not args.get('allUsers','0') == '1' and muser['isClient'] == False:
-            continue
+        
+        #TODO Commenting this out, because it is killing me
+        #muser = _userload(row.username)
+        #muser['isClient'] = False
+        #
+        #if muser.has_key('groups'):
+        #    g = muser['groups']
+        #    print 'u has groups? len '+str(len(g))
+        #    nm = getNodeMemberships(g)
+        #    if len(nm) == 0:
+        #        print 'is client, yo'
+        #        muser['isClient'] = True
+        #else:
+        #    print 'd has no groups, fool!'
+        #if not args.get('allUsers','0') == '1' and muser['isClient'] == False:
+        #    continue
         
         d = {}
         d['username'] = row.username

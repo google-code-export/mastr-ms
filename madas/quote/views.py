@@ -948,8 +948,8 @@ def check_default(request):
 def login(request, *args):
     print "LOGIN!!!!!!!!!!!1"
     success = processLogin(request, args)
-    return jsonResponse(request, []); 
-    #return HttpResponseRedirect(siteurl(request)) 
+    #return jsonResponse(request, []); 
+    return HttpResponseRedirect(siteurl(request)) 
 
 '''
 def authorize(request, module='/', perms = [], internal = False):

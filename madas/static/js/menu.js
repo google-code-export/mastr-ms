@@ -116,11 +116,11 @@ MA.MenuShow = function() {
 
 MA.MenuHandler = function(item) {
     //we authorize every access to check for session timeout and authorization to specific pages
-    if (item.id.substr(0,4) == "help") {
+    //if (item.id.substr(0,4) == "help") {
         MA.ChangeMainContent(item.id);
-    } else {
-        MA.Authorize(item.id);
-    }
+    //} else {
+    //    MA.Authorize(item.id);
+    //}
 }
 
 MA.LogoutHandler = function() {
