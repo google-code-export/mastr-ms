@@ -212,7 +212,8 @@ MA.QuoteRequestListInit = function(){
         });
     var editHandler = function(el, ev) {
         if (selectionModel.hasSelection()) {
-            MA.Authorize('quote:edit', [selectionModel.getSelected().data.id, 'quote:list']);
+            //MA.Authorize('quote:edit', [selectionModel.getSelected().data.id, 'quote:list']);
+            MA.ChangeMainContent('quote:edit', [selectionModel.getSelected().data.id, 'quote:list']);
         }
     };
     var topToolbar = new Ext.Toolbar({
@@ -376,6 +377,7 @@ MA.QuoteRequestListInit = function(){
                 if (list.getSelectionCount() > 0) {
                     sel = list.getSelectedRecords()[0];
                     list.clearSelections(true);
+                    //MA.Authorize('quote:viewformal', {"qid" : sel.data.quoterequestid});
                     MA.Authorize('quote:viewformal', {"qid" : sel.data.quoterequestid});
                 }
             }
@@ -959,7 +961,8 @@ MA.FormalQuoteUserListInit = function(){
         var selectionModel = grid.getSelectionModel();
     
         if (selectionModel.hasSelection() && selectionModel.getSelected().data.quoterequestid !== '') {
-            MA.Authorize('quote:viewformal', {"qid" : selectionModel.getSelected().data.quoterequestid});
+            //MA.Authorize('quote:viewformal', {"qid" : selectionModel.getSelected().data.quoterequestid});
+            MA.ChangeMainContent('quote:viewformal', {"qid" : selectionModel.getSelected().data.quoterequestid});
         }
     };
     

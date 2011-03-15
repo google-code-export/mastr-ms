@@ -317,7 +317,7 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
         removeMask: true
     });
    
-    //MA.Authorize(mainContentFunction, paramArray);
+    MA.ViewAuth(mainContentFunction, paramArray);
 };
 
 

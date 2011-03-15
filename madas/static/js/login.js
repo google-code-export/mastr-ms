@@ -54,7 +54,7 @@ MA.LoginExecute = function(paramArray){
                                             form.reset(); 
                                             //load up the menu and next content area as declared in response
                                             if (action.result.username) {
-                                                Ext.getCmp('userMenu').setText('User: '+action.result.username);
+                                                Ext.getCmp('userMenu').setText('User: aaa '+action.result.username);
                                             }
                                             
                                             resultContent = action.result.mainContentFunction;
@@ -191,11 +191,11 @@ MA.NotAuthorizedCmp = { id: 'notauthorized-panel', title: 'Not Authorized', html
  * authorize
  * used to check if the user is still logged in, and if they can access the requested view
  */
-MA.Authorize = function(requestedView, params) {
+MA.ViewAuth = function(requestedView, params) {
     if (requestedView === 'notauthorized') {
         return MA.ChangeMainContent(requestedView, params);
     }
-    console.log("Called Authorize");
+    console.log("Called ViewAuth");
     //the module we need to auth against is the first part of the requestedView
     //ie admin/adminrequest
     //we authorize against admin/authorize
@@ -206,6 +206,29 @@ MA.Authorize = function(requestedView, params) {
     if (viewSplit.length > 1) {
         action = viewSplit[1];
     }
+   
+    console.log(MA.baseUrl);
+    var simplereq = Ext.Ajax.request({
+                                   url:MA.BaseUrl+'userinfo',
+                                   //baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)},
+                                   success: function(response)
+                                    {
+                                        console.log(this);
+                                        MA.CurrentUser = Ext.decode(response.responseText);
+                                        MA.IsAdmin = MA.CurrentUser.IsAdmin;
+                                        MA.IsNodeRep = MA.CurrentUser.IsNodeRep;
+                                        MA.IsClient = MA.CurrentUser.IsClient;
+                                        MA.IsLoggedIn = MA.CurrentUser.IsLoggedIn;
+                                        MA.IsAdmin = MA.CurrentUser.IsAdmin;
+                                        //console.log(x);
+                                        MA.ChangeMainContent(requestedView, params); 
+                                    
+                                    },
+                                   failure: function() {console.log('Failed to get userinfo');},
+                                   //baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)} 
+                                   });
+
+    
     /*
     //submit form
     var simple = new Ext.BasicForm('hiddenForm', {
@@ -235,7 +258,7 @@ MA.Authorize = function(requestedView, params) {
             */
             //MA.ChangeMainContent(action.result.mainContentFunction, action.result.params);
             
-            MA.ChangeMainContent(requestedView, params);
+            //MA.ChangeMainContent(requestedView, params);
         /*
         },
         failure: function (form, action) {

@@ -15,6 +15,8 @@
  * along with Madas.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+MA.user = null; 
+
 MA.LoginCmp = {id:'login-container-panel', 
 layout:'absolute', 
 items:[
@@ -46,7 +48,7 @@ MA.NotAuthorizedCmp = { id: 'notauthorized-panel', title: 'Not Authorized', html
  * authorize
  * used to check if the user is still logged in, and if they can access the requested view
  */
-MA.Authorize = function(requestedView, params, callback) {
+MA.ViewAuth = function(requestedView, params, callback) {
     if (requestedView === 'notauthorized') {
         return MA.ChangeMainContent(requestedView, params);
     }
@@ -61,8 +63,23 @@ MA.Authorize = function(requestedView, params, callback) {
     if (viewSplit.length > 1) {
         action = viewSplit[1];
     }
+  
+    var simplereq = Ext.Ajax.request({
+                                   url:baseUrl+'/userinfo',
+                                   //baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)},
+                                   success: function(response)
+                                    {
+                                        x = Ext.decode(response.responseText);
+                                        console.log(x);
+                                        console.log(this);
+                                    },
+                                   failure: function() {console.log('Failed to get userinfo')},
+                                   baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)} 
+                                   });
     
+
     //submit form
+    /*
     var simple = new Ext.BasicForm('hiddenForm', {
                                    url:baseUrl+module+'/authorize',
                                    baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)},
@@ -108,6 +125,7 @@ MA.Authorize = function(requestedView, params, callback) {
     };
 
     simple.submit(submitOptions);
+    */
 };
 
 
