@@ -165,7 +165,7 @@ def getGroupsForSession(request, force_reload = False):
 
     return cachedgroups
 
-def setRequestVars(request, success=False, authenticated = 0, authorized = 0, totalRows = 0, mainContentFunction = '', username='', params = None, items=None, data=None):
+def setRequestVars(request, success=False, authenticated = 0, authorized = 0, totalRows = 0, user={}, mainContentFunction = '', username='', params = None, items=None, data=None):
     """Make sure we set the session vars the same way each time, with sensible defaults"""
     
     if params is None:
@@ -184,6 +184,7 @@ def setRequestVars(request, success=False, authenticated = 0, authorized = 0, to
     store['totalRows']            = totalRows
     store['mainContentFunction']  = mainContentFunction
     store['params']               = params
+    store['user']                 = user
     #print 'Setting params. ', params, 'Type was: ', type(request.store['params'])
     if items is None:
         store['items']            = items
@@ -249,6 +250,7 @@ def jsonResponse(request, *args):
     a['authorized'] =       get_var(s, 'authorized', 0)
     a['user_id'] =          request.user.id
     a['username'] =         request.user.username
+    a['user'] =             get_var(s, 'user', {})
     #TODO: This isnt quite right. admin != node rep, node rep != admin
 
 

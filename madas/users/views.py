@@ -2,8 +2,10 @@
 from django.contrib.auth.ldap_helper import LDAPHandler
 from madas.utils import setRequestVars, jsonResponse, translate_dict, makeJsonFriendly
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
 
-from madas.quote.views import authorize
+
+#from madas.quote.views import authorize
 
 def _translate_madas_to_ldap(mdict):
     retdict = translate_dict(mdict, [('username', 'uid'), \
@@ -110,7 +112,8 @@ def _userload(username):
     return d
     
 
-
+#Use view decorator here
+@login_required
 def userload(request, *args):
     '''This is called when loading user details - when the user
        clicks on the User button in the dashboard and selects 'My Account'
@@ -119,9 +122,9 @@ def userload(request, *args):
     print '***userload : enter ***' 
     ### Authorisation Check ###
     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True)
-    if auth_result is not True:
-        return auth_response
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     u = request.REQUEST.get('username', request.user.username)
 

@@ -96,7 +96,7 @@ function callbacker(){
     
     MA.InitApplication('${ APP_SECURE_URL }', '${ username }', '${ mainContentFunction }', "${ params }");
     document.getElementById("appLoad").style.display = "none";
-    document.getElementById('loginDiv').style.display = 'none';
+    //document.getElementById('loginDiv').style.display = 'none';
 }
 </script>
 

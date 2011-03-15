@@ -3,8 +3,8 @@ from django.conf.urls.defaults import *
 urlpatterns = patterns(
     '',
     
-    (r'^(?P<module>.*)/authorize', 'madas.quote.views.authorize', {'SSL':True}),
-    (r'^authorize', 'madas.quote.views.authorize', {'SSL':True}),
+    #(r'^(?P<module>.*)/authorize', 'madas.quote.views.authorize', {'SSL':True}),
+    #(r'^authorize', 'madas.quote.views.authorize', {'SSL':True}),
     (r'^user/userload', 'madas.users.views.userload', {'SSL':True}),
     (r'^user/userSave', 'madas.users.views.userSave', {'SSL':True}),
     
