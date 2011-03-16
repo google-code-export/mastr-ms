@@ -18,11 +18,11 @@ def admin_requests(request, *args):
     '''
     print '***admin requests : enter***'
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
 
     print 'admin_requests'
@@ -74,11 +74,11 @@ def user_search(request, *args):
        Accessible by Administrators, Node Reps
     '''
     ### Authorisation Check ###
-    from madas.quote.views import authorize
+    #from madas.quote.views import authorize
     from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     
     import utils
@@ -147,11 +147,11 @@ def rejected_user_search(request, *args):
     '''
     print '***rejected_user_search : enter ***' 
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
 
 
@@ -200,11 +200,11 @@ def deleted_user_search(request, *args):
     '''
     print '***deleted_user_search : enter ***' 
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     
     import utils
@@ -249,11 +249,11 @@ def user_load(request, *args):
     '''
     print '***admin/user_load : enter ***' 
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
    
     import madas.users 
@@ -281,11 +281,11 @@ def user_save(request, *args):
     '''
     print '***admin/user_save : enter ***' 
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
    
     import madas.users 
@@ -352,11 +352,11 @@ def node_save(request, *args):
     '''
     print '*** node_save : enter ***'
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
     oldname = str(request.REQUEST.get('originalName', ''))
     newname = str(request.REQUEST.get('name', ''))
@@ -388,11 +388,11 @@ def node_delete(request, *args):
     '''
     print '*** node_delete : enter ***'
     ### Authorisation Check ###
-    from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    (auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    if auth_result is not True:
-        return auth_response
+    #from madas.quote.views import authorize
+    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
+    #if auth_result is not True:
+    #    return auth_response
     ### End Authorisation Check ###
 
  
