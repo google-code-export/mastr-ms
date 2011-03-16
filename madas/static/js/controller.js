@@ -165,6 +165,11 @@ MA.ChangeMainContent = function(contentName, paramArray){
         	Ext.getCmp('center-panel').layout.setActiveItem('fquolist-panel');
         	break;
 
+        case 'client:list':
+            clientsListStore.reload();
+            Ext.getCmp('center-panel').layout.setActiveItem('clients-list');
+            break;
+
         case "project:list":
             projectsListStore.load();
             Ext.getCmp('center-panel').layout.setActiveItem('projects-list');
@@ -190,6 +195,23 @@ MA.ChangeMainContent = function(contentName, paramArray){
 
         case 'experiment:new':
             MA.ExperimentController.createExperiment();
+            break;
+
+        case "run:list":
+            runListStore.load();
+
+            runListStore.sort([
+                {
+                    field: "state",
+                    direction: "DESC"
+                },
+                {
+                    field: "id",
+                    direction: "DESC"
+                }
+            ]);
+
+            Ext.getCmp("center-panel").layout.setActiveItem("runs-list");
             break;
 
     	case "help:screencasts-quoterequest":
@@ -300,6 +322,8 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
                         MA.RequestQuoteCmp, MA.QuoteRequestEditCmp, MA.ViewFormalCmp,
                         MA.ExperimentCmp,
                         MA.ProjectListCmp, MA.ProjectCmp, 
+                        MA.ClientsListCmp,
+                        MA.RunListCmp,
                         MA.ScreencastsCmp]
             }
             ]
