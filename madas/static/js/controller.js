@@ -31,7 +31,6 @@ MA.ChangeMainContent = function(contentName, paramArray){
     var cancelBackTarget = true; //whether or not this action should be invoked if a user clicks Cancel (where the variable is obeyed)
 
     Ext.QuickTips.init();
-    alert('called ChangeMainContent, contentName was: ' + contentName);
     
     switch (contentName) {
     
@@ -337,8 +336,7 @@ MA.AjaxMetadataProcess = function(ajaxData) {
    //look for specific sentinel values in the json
    //var authenticated = ajaxData.response.value.authenticated;
    //var authorized = ajaxData.response.value.authorized;
-    alert("Metadata");
-    console.log('AjaxMetadataProcess is returning true');
+    console.log('TODO: AjaxMetadataProcess was hit');
     return true;
     var authenticated = ajaxData.authenticated;
     var authorized = ajaxData.authorized;
