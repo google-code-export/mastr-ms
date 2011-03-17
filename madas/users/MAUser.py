@@ -1,5 +1,13 @@
-from madas.utils import getGroupsForSession
 from django.utils import simplejson
+from django.contrib.auth.ldap_helper import LDAPHandler
+
+
+#Gets the MAUser object out of the session.
+def getCurrentUser(request):
+    if not request.session.get('mauser', False):
+        request.session['mauser'] = MAUser();
+        MAUser.refresh();
+    return request.session['mauser']
 
 #Just a class to encapsulate data to send to the frontend (as json)
 class MAUser(object):
@@ -49,6 +57,13 @@ class MAUser(object):
     def CachedGroups(self, value):
         self._dict['CachedGroups'] = value
 
+    def getGroupsForUser(self, force_reload = False):
+        if self.CachedGroups is [] or force_reload:
+            print '\tNo cached groups for %s. Fetching.' % (self.Username)
+            ld = LDAPHandler()
+            self.CachedGroups = ld.ldap_get_user_groups(self.Username)
+        return self.CachedGroups    
+    
     def refresh(self, request):
         #defaults
         self.IsLoggedIn = False
@@ -63,7 +78,7 @@ class MAUser(object):
             self.Username = request.user.username
             #Grab groups, forcing a reload. These are stored in the session,
             #along with other variables like IsAdmin etc.
-            self.CachedGroups = getGroupsForSession(request, force_reload = True)
+            self.CachedGroups = self.getGroupsForUser(force_reload = True)
             if self.CachedGroups is None:
                 self.CachedGroups = [];
             

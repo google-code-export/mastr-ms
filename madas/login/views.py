@@ -5,7 +5,7 @@ from django.utils.webhelpers import siteurl
 from madas.utils import setRequestVars, jsonResponse
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.utils import simplejson
-from users.views import MAUser
+from users.MAUser import MAUser
 
 def processLogin(request, *args):
     print '***processLogin : enter ***' 

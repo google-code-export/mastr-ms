@@ -137,33 +137,34 @@ def uniqueList(l):
 
     return result
 
-def getGroupsForSession(request, force_reload = False):
-    cachedgroups = request.session.get('cachedgroups', [])
-    if cachedgroups is [] or force_reload:
-        print '\tNo cached groups for %s. Fetching.' % (request.user.username)
-        ld = LDAPHandler()
-        g = ld.ldap_get_user_groups(request.user.username)
-        request.session['cachedgroups'] = g
-        print '\tStored groups for %s: %s' % (request.user.username, request.session.get('cachedgroups') )
-        cachedgroups = g
-        
-        request.session['isNodeRep'] = False
-        request.session['isAdmin'] = False
 
-        if cachedgroups:
-            request.session['isClient'] = False
-        
-            for group in cachedgroups:
-                if group == 'Administrators':
-                    request.session['isAdmin'] = True
-                if group == 'Node Reps':
-                    request.session['isNodeRep'] = True
-        
-            if len(cachedgroups) == 1 and cachedgroups[0] == 'User':        
-                request.session['isClient'] = True
-                print 'isClient'
-
-    return cachedgroups
+#def getGroupsForSession(request, force_reload = False):
+#    cachedgroups = request.session.get('cachedgroups', [])
+#    if cachedgroups is [] or force_reload:
+#        print '\tNo cached groups for %s. Fetching.' % (request.user.username)
+#        ld = LDAPHandler()
+#        g = ld.ldap_get_user_groups(request.user.username)
+#        request.session['cachedgroups'] = g
+#        print '\tStored groups for %s: %s' % (request.user.username, request.session.get('cachedgroups') )
+#        cachedgroups = g
+#        
+#        request.session['isNodeRep'] = False
+#        request.session['isAdmin'] = False
+#
+#        if cachedgroups:
+#            request.session['isClient'] = False
+#        
+#            for group in cachedgroups:
+#                if group == 'Administrators':
+#                    request.session['isAdmin'] = True
+#                if group == 'Node Reps':
+#                    request.session['isNodeRep'] = True
+#        
+#            if len(cachedgroups) == 1 and cachedgroups[0] == 'User':        
+#                request.session['isClient'] = True
+#                print 'isClient'
+#
+#    return cachedgroups
 
 def setRequestVars(request, success=False, authenticated = 0, authorized = 0, totalRows = 0, user={}, mainContentFunction = '', username='', params = None, items=None, data=None):
     """Make sure we set the session vars the same way each time, with sensible defaults"""
