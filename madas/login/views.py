@@ -5,7 +5,7 @@ from django.utils.webhelpers import siteurl
 from madas.utils import setRequestVars, jsonResponse
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.utils import simplejson
-from users.views import MadasUser
+from users.views import MAUser
 
 def processLogin(request, *args):
     print '***processLogin : enter ***' 
@@ -76,7 +76,7 @@ def processLogin(request, *args):
         request.user.is_superuser = False
         
 
-        madasuser = MadasUser()
+        madasuser = MAUser()
         madasuser.refresh(request)
         
         for gr in madasuser.CachedGroups:
