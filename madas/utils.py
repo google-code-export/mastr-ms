@@ -158,7 +158,7 @@ def getGroupsForSession(request, force_reload = False):
                     request.session['isAdmin'] = True
                 if group == 'Node Reps':
                     request.session['isNodeRep'] = True
-
+        
             if len(cachedgroups) == 1 and cachedgroups[0] == 'User':        
                 request.session['isClient'] = True
                 print 'isClient'
