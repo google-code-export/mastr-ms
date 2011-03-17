@@ -213,14 +213,14 @@ MA.ViewAuth = function(requestedView, params) {
                                    //baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)},
                                    success: function(response)
                                     {
-                                        console.log(this);
+                                        //console.log(this);
                                         MA.CurrentUser = Ext.decode(response.responseText);
                                         MA.IsAdmin = MA.CurrentUser.IsAdmin;
                                         MA.IsNodeRep = MA.CurrentUser.IsNodeRep;
                                         MA.IsClient = MA.CurrentUser.IsClient;
                                         MA.IsLoggedIn = MA.CurrentUser.IsLoggedIn;
                                         MA.IsAdmin = MA.CurrentUser.IsAdmin;
-                                        //console.log(x);
+                                        console.log(MA.CurrentUser);
                                         MA.ChangeMainContent(requestedView, params); 
                                     
                                     },

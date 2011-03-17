@@ -24,11 +24,17 @@ class MAUser(object):
     def IsClient(self, value):
         self._dict['IsClient'] = value
     @property 
+    def IsStaff(self):
+        return self._dict.get('IsStaff', False)
+    @IsStaff.setter 
+    def IsStaff(self, value):
+        self._dict['IsStaff'] = value 
+    @property 
     def IsLoggedIn(self):
         return self._dict.get('IsLoggedIn', False)
     @IsLoggedIn.setter 
     def IsLoggedIn(self, value):
-        self._dict['IsLoggedIn'] = value 
+        self._dict['IsLoggedIn'] = value
     @property 
     def Username(self):
         return self._dict.get('Username', False)
@@ -49,6 +55,7 @@ class MAUser(object):
         self.IsAdmin = False
         self.IsClient = False
         self.IsNodeRep = False
+        self.IsStaff = False
         self.Username = ""
 
         if request.user:
@@ -59,10 +66,23 @@ class MAUser(object):
             self.CachedGroups = getGroupsForSession(request, force_reload = True)
             if self.CachedGroups is None:
                 self.CachedGroups = [];
-            self.IsAdmin = request.session.get('isAdmin', False)
-            self.IsNodeRep = request.session.get('isNodeRep', False)
-            self.IsClient = request.session.get('isClient', False)
-  
+            
+            if 'Administrators' in self.CachedGroups:
+                self.IsAdmin = True
+            if 'Node Reps' in self.CachedGroups:
+                self.IsNodeRep = True
+            
+            #For 'staff':
+            #They are not an admin
+            #They are not a NodeRep
+            #But they are part of some other group.
+            #Note that all users are part of a 'User' group, so the test is:
+            #!admin and !noderep and numgroups > 1
+            if not self.IsAdmin and not self.IsNodeRep and len(self.CachedGroups) > 1:
+                self.IsStaff = True
+            elif len(self.CachedGroups) == 1 and 'User' in self.CachedGroups:
+                self.IsClient = True
+
         #Store this user in the session
         request.session['mauser'] = self
 
