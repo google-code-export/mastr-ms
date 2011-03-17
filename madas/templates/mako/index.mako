@@ -36,7 +36,7 @@
 <script src="${wh.url('/static/ext-3.3.0/ext-all.js')}"></script>
 -->
 <script src="${wh.url('/static/ext-3.3.0/ext-all-debug.js')}"></script>
-<script type="text/javascript" src="${wh.url('/static/repo/js/DisplayField.js')}"></script>
+<script type="text/javascript" src="${wh.url('/static/js/repo/DisplayField.js')}"></script>
 
 
 <!-- setup variable -->
