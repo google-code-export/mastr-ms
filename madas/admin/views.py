@@ -11,20 +11,16 @@ from madas.repository.json_util import makeJsonFriendly
 from django.utils import simplejson as json
 
 from django.conf import settings
+from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+from django.contrib.auth.decorators import login_required
+from madas.decorators import admins_only
 
+@admins_only
 def admin_requests(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active Requests
        Accessible by Administrators, Node Reps
     '''
     print '***admin requests : enter***'
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-
     print 'admin_requests'
     #provide livegrid pager data for admin requests
     searchgroup = []
@@ -73,14 +69,6 @@ def user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active User Search
        Accessible by Administrators, Node Reps
     '''
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-    
     import utils
     g = utils.getGroupsForSession(request)
     searchGroup = []
@@ -146,15 +134,6 @@ def rejected_user_search(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '***rejected_user_search : enter ***' 
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-
-
     ld = LDAPHandler()
     searchgroup = []
    
@@ -199,14 +178,6 @@ def deleted_user_search(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '***deleted_user_search : enter ***' 
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-    
     import utils
     g = utils.getGroupsForSession(request) 
     searchgroup = [] 
@@ -248,14 +219,6 @@ def user_load(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '***admin/user_load : enter ***' 
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-   
     import madas.users 
     from madas.users.views import _userload
     d = _userload(request.REQUEST['username'])
@@ -280,14 +243,6 @@ def user_save(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '***admin/user_save : enter ***' 
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-   
     import madas.users 
     from madas.users.views import _usersave
     oldstatus, status =  _usersave(request, request.REQUEST['email'], admin=True)
@@ -351,13 +306,6 @@ def node_save(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '*** node_save : enter ***'
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
     oldname = str(request.REQUEST.get('originalName', ''))
     newname = str(request.REQUEST.get('name', ''))
     print '\toriginal name was: ', oldname 
@@ -387,15 +335,6 @@ def node_delete(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '*** node_delete : enter ***'
-    ### Authorisation Check ###
-    #from madas.quote.views import authorize
-    #from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    #(auth_result, auth_response) = authorize(request, module = 'admin', internal=True, perms=MADAS_ADMIN_GROUPS)
-    #if auth_result is not True:
-    #    return auth_response
-    ### End Authorisation Check ###
-
- 
     #We must make sure 'Administrator' and 'User' groups cannot be deleted.
     delname = str(request.REQUEST.get('name', ''))
     ldelname = delname.lower()
