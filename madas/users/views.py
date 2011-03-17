@@ -1,11 +1,11 @@
 # Create your views here.
 from django.contrib.auth.ldap_helper import LDAPHandler
-from madas.utils import getGroupsForSession, setRequestVars, jsonResponse, translate_dict, makeJsonFriendly
+from madas.utils import setRequestVars, jsonResponse, translate_dict, makeJsonFriendly
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
-from MAUser import MAUser
+from MAUser import MAUser, getCurrentUser
 
 ##The user info view, which sends the state of the logged in
 ##user to the frontend.
@@ -359,8 +359,7 @@ def _usersave(request, username, admin=False):
         print 'Non admin/node-rep user. No Status updates performed.'
 
     #force a new lookup of the users' groups to be cached, in case the modified user is the logged in user.
-    import madas.utils
-    madas.utils.getGroupsForSession(request, force_reload = True)
+    getCurrentUser().refresh() 
 
     if status is None or not request.session['isAdmin']:
         return oldstatus, oldstatus

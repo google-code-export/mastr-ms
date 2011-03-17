@@ -14,6 +14,7 @@ from django.conf import settings
 from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
 from django.contrib.auth.decorators import login_required
 from madas.decorators import admins_only
+from madas.users.MAUser import getCurrentUser
 
 @admins_only
 def admin_requests(request, *args):
@@ -25,9 +26,7 @@ def admin_requests(request, *args):
     #provide livegrid pager data for admin requests
     searchgroup = []
 
-    import utils
-    g = utils.getGroupsForSession(request)
-    
+    g = getCurrentUser(request).CachedGroups 
     if 'Administrators' not in g and 'Node Reps' in g:
         from madas.users import views
         searchgroup = views.getNodeMemberships(g)
@@ -69,8 +68,7 @@ def user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active User Search
        Accessible by Administrators, Node Reps
     '''
-    import utils
-    g = utils.getGroupsForSession(request)
+    g = getCurrentUser(request).CachedGroups 
     searchGroup = []
     
     if 'Administrators' not in g and 'Node Reps' in g:
@@ -137,8 +135,7 @@ def rejected_user_search(request, *args):
     ld = LDAPHandler()
     searchgroup = []
    
-    import utils 
-    g = utils.getGroupsForSession(request)
+    g = getCurrentUser(request).CachedGroups 
     
     if 'Administrators' not in g and 'Node Reps' in g:
         from madas.users import views
@@ -178,8 +175,7 @@ def deleted_user_search(request, *args):
        Accessible by Administrators, Node Reps
     '''
     print '***deleted_user_search : enter ***' 
-    import utils
-    g = utils.getGroupsForSession(request) 
+    g = getCurrentUser(request).CachedGroups 
     searchgroup = [] 
     if 'Administrators' not in g and 'Node Reps' in g:
         from madas.users import views

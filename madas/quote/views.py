@@ -13,6 +13,7 @@ from django.shortcuts import render_to_response, render_mako
 from django.utils.webhelpers import siteurl, wsgibase
 import django.utils.webhelpers as webhelpers
 from madas.login.views import processLogin 
+from madas.users.MAUser import getCurrentUser
 from string import *
 
 QUOTE_STATE_DOWNLOADED = 'downloaded'
@@ -45,8 +46,7 @@ def listGroups(request, *args):
 
 def listRestrictedGroups(request, *args):
     print '*** list Restricted Groups : enter ***'
-    import utils
-    g = utils.getGroupsForSession(request)
+    g = getCurrentUser(request).CachedGroups
     if 'Administrators' in g:
         retval = listGroups(request)
     else:
@@ -189,7 +189,7 @@ def listQuotesRequiringAttention(request):
    
     qs = Quoterequest.objects.filter(completed=False,formalquote__id=None)
     import utils
-    g = utils.getGroupsForSession(request)
+    g = getCurrentUser(request).CachedGroups 
     if 'Node Reps' in g and 'Administrators' not in g:
         from madas.users import views
         print '\tcalling'
@@ -216,7 +216,7 @@ def listQuotes(request, *args):
     '''
     #TODO: Find out which nodes this user represents, or if they are an administrator
     import utils
-    g = utils.getGroupsForSession(request)
+    g = getCurrentUser(request).CachedGroups
 
     print '\tgroups was : ' + str(g)
     from madas.users import views
@@ -581,15 +581,6 @@ def formalLoad(request, *args, **kwargs):
                 retvals['pdf'] = retvals['details']
                 
                 e = ld.ldap_get_user_details(retvals['toemail'])
-                if len(e) > 0:
-                    ### Authorisation Check ### we do this here because we need to allow auth if the request is for a formal quote sent to an unregistered user
-                    #from madas.quote.views import authorize
-                    from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-                    #(auth_result, auth_response) = authorize(request, module = 'quote', internal=True)
-                    #if auth_result is not True:
-                    #    return auth_response
-                    ### End Authorisation Check ###  
-
             else:
                 print '\tNo formal quotes.'
                 retvals = retdata 
