@@ -17,12 +17,14 @@
 
 MA.ResetUser = function()
 {
-    MA.user = {
-    IsAdmin: false,
-    IsNodeRep: false,
-    IsClient: false,
-    IsLoggedIn: false,
-    Username: ""};
+    MA.CurrentUser = {
+        IsAdmin: false,
+        IsNodeRep: false,
+        IsClient: false,
+        IsStaff: false,
+        IsLoggedIn: false,
+        Username: ""
+    };
 }
 
 Ext.Ajax.on('requestexception', function(conn, response, options, e)
@@ -31,11 +33,13 @@ Ext.Ajax.on('requestexception', function(conn, response, options, e)
     {
         console.log("GLOBAL XHR error handler: Unauthenticated. Resetting user.");
         MA.ResetUser();
+        MA.ChangeMainContent('login');
     }
     else if (response.status == 403)
     {
         console.log("GLOBAL XHR error handler: Unauthorised. Resetting user.");
         MA.ResetUser();
+        MA.ChangeMainContent('notauthorized');
     }
     else
     {
@@ -187,89 +191,22 @@ MA.ForgotPasswordCmp = {id:'forgot-password-container-panel',
                 
 MA.NotAuthorizedCmp = { id: 'notauthorized-panel', title: 'Not Authorized', html: 'You are not authorized to access this page' };
 
-/**
- * authorize
- * used to check if the user is still logged in, and if they can access the requested view
- */
-MA.ViewAuth = function(requestedView, params) {
-    if (requestedView === 'notauthorized') {
-        return MA.ChangeMainContent(requestedView, params);
-    }
-    console.log("Called ViewAuth");
-    //the module we need to auth against is the first part of the requestedView
-    //ie admin/adminrequest
-    //we authorize against admin/authorize
-    var viewSplit = requestedView.split(":");
-    var module = viewSplit[0];
-    
-    var action = "";
-    if (viewSplit.length > 1) {
-        action = viewSplit[1];
-    }
-   
-    console.log(MA.baseUrl);
+MA.GetUserInfo = function(callback) {
+    console.log("Called GetUserInfo");
     var simplereq = Ext.Ajax.request({
-                                   url:MA.BaseUrl+'userinfo',
-                                   //baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)},
-                                   success: function(response)
-                                    {
-                                        //console.log(this);
-                                        MA.CurrentUser = Ext.decode(response.responseText);
-                                        MA.IsAdmin = MA.CurrentUser.IsAdmin;
-                                        MA.IsNodeRep = MA.CurrentUser.IsNodeRep;
-                                        MA.IsClient = MA.CurrentUser.IsClient;
-                                        MA.IsLoggedIn = MA.CurrentUser.IsLoggedIn;
-                                        MA.IsAdmin = MA.CurrentUser.IsAdmin;
-                                        console.log(MA.CurrentUser);
-                                        MA.ChangeMainContent(requestedView, params); 
-                                    
-                                    },
-                                   failure: function() {console.log('Failed to get userinfo');},
-                                   //baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)} 
-                                   });
-
-    
-    /*
-    //submit form
-    var simple = new Ext.BasicForm('hiddenForm', {
-        url:MA.BaseUrl + module+'/authorize',
-        baseParams:{'subaction':action, 'params':Ext.util.JSON.encode(params)},
-        method:'POST'
-        });
-
-    var submitOptions = {
-        successProperty: 'success',        
-        success: function (form, action) {
-            //load up the menu and next content area as declared in response
-            if (action.result.username) {
-                Ext.getCmp('userMenu').setText('User: '+action.result.username);
-                MA.IsAdmin = action.result.isAdmin;
-                MA.IsNodeRep = action.result.isNodeRep;
-                MA.IsClient = action.result.isClient;
-                MA.IsLoggedIn = true;
-            }
-            if (! action.result.authenticated) {
-                MA.IsAdmin = false;
-                MA.IsNodeRep = false;
-                MA.IsClient = false;
-                MA.IsLoggedIn = false;
-                Ext.getCmp('userMenu').setText('User: none');
-            }
-            */
-            //MA.ChangeMainContent(action.result.mainContentFunction, action.result.params);
-            
-            //MA.ChangeMainContent(requestedView, params);
-        /*
-        },
-        failure: function (form, action) {
-            //load up the menu and next content area as declared in response
-            //alert(action.response.responseText);
-            MA.ChangeMainContent(action.result.mainContentFunction, action.result.params);
-        }
-    };
-
-    simple.submit(submitOptions);
-    */
+            url:MA.BaseUrl+'userinfo',
+            success: function(response) {
+                   console.log(this);
+                   MA.CurrentUser = Ext.decode(response.responseText);
+                   if (callback !== undefined) {
+                        callback();
+                   }
+            },
+            failure: function() {
+                   console.log('Failed to get userinfo');
+                   MA.ResetUser();
+            },
+    });
 };
 
 MA.LoginInit = function(paramArray) {
@@ -298,9 +235,9 @@ MA.LogoutInit = function(){
         successProperty: 'success',        
         success: function (form, action) {
             if (action.result.success === true) { 
-                MA.IsAdmin = false;
+                MA.CurrentUser.IsAdmin = false;
                 Ext.getCmp('userMenu').setText('User: none');
-                MA.IsLoggedIn = false;
+                MA.CurrentUser.IsLoggedIn = false;
             
                 Ext.Msg.alert('Successfully logged out', '(this dialog will auto-close in 3 seconds)');
                 setTimeout(Ext.Msg.hide, 3000);

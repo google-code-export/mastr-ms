@@ -77,7 +77,7 @@ MA.MenuRender = function(username) {
 }
 
 MA.MenuEnsure = function() {
-    if (MA.IsLoggedIn) 
+    if (MA.CurrentUser.IsLoggedIn) 
         MA.MenuShow();
     else 
         MA.MenuHide();
@@ -88,9 +88,9 @@ MA.MenuShow = function() {
     Ext.BLANK_IMAGE_URL = MA.BaseUrl + 'static/ext-3.3.0/resources/images/default/s.gif';
 
     //disable certain menu items if the user is not an admin
-    if (!MA.IsAdmin) {
+    if (!MA.CurrentUser.IsAdmin) {
         Ext.getCmp('admin:nodelist').disable();
-        if (!MA.IsNodeRep) {
+        if (!MA.CurrentUser.IsNodeRep) {
 	        Ext.get('admin').hide();
             Ext.getCmp('helpadmin:screencasts').disable();
         }

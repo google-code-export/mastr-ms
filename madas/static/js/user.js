@@ -70,7 +70,7 @@ MA.UserEditCmp = {id:'useredit-container-panel',
                     url:MA.BaseUrl + 'user/userSave',
                     method:'POST',
                     frame:true,
-                    reader: new MA.JsonReader({
+                    reader: new Ext.data.JsonReader({
                                                               root            : 'data',
                                                               versionProperty : 'response.value.version',
                                                               totalProperty   : 'response.value.total_count',

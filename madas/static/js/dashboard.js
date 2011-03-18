@@ -20,7 +20,7 @@ MA.Dashboard.CreatePendingUserRequests = function() {
     var selectionModel = new Ext.grid.RowSelectionModel({ 
         singleSelect: true
     });
-    var madasReader = new MA.JsonReader({
+    var madasReader = new Ext.data.JsonReader({
             root: 'response.value.items',
             versionProperty: 'response.value.version',
             totalProperty: 'response.value.total_count'
@@ -496,12 +496,13 @@ MA.Dashboard.CreateStaffDashboard = function() {
 
 
 MA.Dashboard.Create = function() {
-    if (!MA.IsLoggedIn) {
-        return MA.NotAuthorizedCmp;
+    if (!MA.CurrentUser.IsLoggedIn) {
+        return;
     }
-    if (MA.IsAdmin || MA.IsNodeRep) {
+    MA.Dashboard.IsCreated = true;
+    if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep) {
         return MA.Dashboard.CreateAdminDashboard();
-    } else if (MA.IsClient) {
+    } else if (MA.CurrentUser.IsClient) {
         return MA.Dashboard.CreateClientDashboard();
     } else {
         return MA.Dashboard.CreateStaffDashboard();
@@ -513,9 +514,12 @@ MA.Dashboard.Init = function(){
     var dboard;
     if (!MA.Dashboard.IsCreated) {
         dboard = MA.Dashboard.Create();
-        Ext.getCmp('center-panel').add(dboard);
-        MA.Dashboard.IsCreated = true;
+        if (dboard !== undefined) {
+            Ext.getCmp('center-panel').add(dboard);
+        }
     }
-    Ext.getCmp('dashboard-panel').init();
+    if (MA.Dashboard.IsCreated) {
+        Ext.getCmp('dashboard-panel').init();
+    }
 };
 
