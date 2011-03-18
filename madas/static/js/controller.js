@@ -38,7 +38,7 @@ MA.ChangeMainContent = function(contentName, paramArray){
             if (paramArray) {
                 resultContent = paramArray[0];
                 params = paramArray[1];
-                MA.Authorize(resultContent, params);
+                //MA.Authorize(resultContent, params);
                 break;
             }
             //default
@@ -282,11 +282,12 @@ MA.ChangeMainContent = function(contentName, paramArray){
 MA.InitApplication = function(appSecureUrl, username, mainContentFunction, params) {
    console.log("InitApplication was run");
    //various global settings for Ext
-    Ext.BLANK_IMAGE_URL = appSecureUrl + 'static/ext-3.3.0/resources/images/default/s.gif';
+   Ext.BLANK_IMAGE_URL = appSecureUrl + 'static/ext-3.3.0/resources/images/default/s.gif';
    Ext.QuickTips.init();
-    MA.BaseUrl = appSecureUrl;
+   MA.BaseUrl = appSecureUrl;
    
    MA.LoginSubmitURL = appSecureUrl + 'login/processLogin';
+   MA.ResetUser();
    MA.InitFunction = mainContentFunction;
 
    // turn on validation errors beside the field globally
@@ -340,7 +341,9 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
         removeMask: true
     });
    
-    MA.ViewAuth(mainContentFunction, paramArray);
+    MA.GetUserInfo(function() {
+        MA.ChangeMainContent(mainContentFunction, paramArray);
+    });
 };
 
 
@@ -350,41 +353,3 @@ MA.Message = function(paramArray) {
 
 };
 
-/**
- * madasAjaxMetadataProcess
- * look at the other headers in the header of an ajax request for a livegrid or other Object
- * assessing whether the user has timed-out or is not authorized to perform that action
- */
-MA.AjaxMetadataProcess = function(ajaxData) {
-    
-   //look for specific sentinel values in the json
-   //var authenticated = ajaxData.response.value.authenticated;
-   //var authorized = ajaxData.response.value.authorized;
-    console.log('TODO: AjaxMetadataProcess was hit');
-    return true;
-    var authenticated = ajaxData.authenticated;
-    var authorized = ajaxData.authorized;
-
-
-   if (authenticated != 1) {
-        console.log("ajax nmeta");
-        //trigger the login page
-        MA.IsLoggedIn = false;
-        MA.IsAdmin = false;
-        Ext.getCmp('userMenu').setText('User: none');
-
-        MA.ChangeMainContent('login');
-        //return false to tell the JsonReader to abort
-        return false;
-   }
-   
-   if (authorized != 1) {
-        //trigger a notauthorized page
-        MA.ChangeMainContent('notauthorized');
-        //return false to tell the JsonReader to abort
-        return false;
-   }
-   
-   return true;
-
-};

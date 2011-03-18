@@ -18,7 +18,7 @@ MA.AdminRequestsInit = function(){
     
 	var dataurl = MA.BaseUrl + "admin/adminrequests";
     
-    var madasReader = new MA.JsonReader({
+    var madasReader = new Ext.data.JsonReader({
                                               root            : 'response.value.items',
                                               versionProperty : 'response.value.version',
                                               totalProperty   : 'response.value.total_count'
@@ -96,7 +96,7 @@ MA.UserSearchInit = function(){
     
 	var dataurl = MA.BaseUrl + "admin/usersearch";
     
-    var madasReader = new MA.JsonReader({
+    var madasReader = new Ext.data.JsonReader({
                                               root            : 'response.value.items',
                                               versionProperty : 'response.value.version',
                                               totalProperty   : 'response.value.total_count'
@@ -176,7 +176,7 @@ MA.RejectedUserSearchInit = function(){
     
 	var dataurl = MA.BaseUrl + "admin/rejectedUsersearch";
     
-    var madasReader = new MA.JsonReader({
+    var madasReader = new Ext.data.JsonReader({
                                               root            : 'response.value.items',
                                               versionProperty : 'response.value.version',
                                               totalProperty   : 'response.value.total_count'
@@ -254,7 +254,7 @@ MA.DeletedUserSearchInit = function(){
     
 	var dataurl = MA.BaseUrl + "admin/deletedUsersearch";
     
-    var madasReader = new MA.JsonReader({
+    var madasReader = new Ext.data.JsonReader({
                                               root            : 'response.value.items',
                                               versionProperty : 'response.value.version',
                                               totalProperty   : 'response.value.total_count'
@@ -343,7 +343,7 @@ MA.AdminUserEditInit = function (paramArray) {
     Ext.getCmp('adminUserEditSubmit').enable();
     
     //if user is not an admin, disable certain UI components in the form
-    if (!MA.IsAdmin) {
+    if (!MA.CurrentUser.IsAdmin) {
         Ext.getCmp('adminUserEditIsAdmin').disable();
         Ext.getCmp('adminUserEditNode').disable();
     } else {
@@ -399,7 +399,7 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
            url:MA.BaseUrl + 'admin/userSave',
            method:'POST',
            frame:true,
-           reader: new MA.JsonReader({
+           reader: new Ext.data.JsonReader({
                                                  root            : 'data',
                                                  versionProperty : 'response.value.version',
                                                  totalProperty   : 'response.value.total_count',
@@ -563,7 +563,7 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
                                         triggerAction:'all',
                                         listWidth:230,
                                         store: new Ext.data.JsonStore({
-                                                                      autoLoad:true,
+                                                                      autoLoad:false,
                                                                       storeId: 'organisationDS',
                                                                       url: MA.BaseUrl + 'admin/listOrganisations',
                                                                       root: 'response.value.items',
@@ -740,7 +740,7 @@ id:'nodedetails-panel',
 url:MA.BaseUrl + 'admin/nodesave',
 region: 'center',
 method:'POST',
-reader: new MA.JsonReader(),
+reader: new Ext.data.JsonReader(),
 bodyStyle: 'padding:10px;',
 title: 'Node Details',
 defaults: {width: 230},
@@ -931,7 +931,7 @@ MA.OrgDetailsCmp = {
     url:MA.BaseUrl + 'admin/orgsave',
     region: 'center',
     method:'POST',
-    reader: new MA.JsonReader(),
+    reader: new Ext.data.JsonReader(),
     bodyStyle: 'padding:10px;',
     title: 'Organisation Details',
     defaults: {width: 230},

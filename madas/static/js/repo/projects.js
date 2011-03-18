@@ -618,7 +618,7 @@ MA.ProjectList = Ext.extend(Ext.Panel, {
                                         cls: "x-btn-text-icon",
                                         icon: "static/repo/images/add.png",
                                         handler: function (b, e) {
-                                            if (MA.IsAdmin || MA.IsNodeRep) {
+                                            if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep) {
                                                 MA.MenuHandler({ "id": "project:new" });
                                             } else {
                                                 b.disable();
@@ -630,7 +630,7 @@ MA.ProjectList = Ext.extend(Ext.Panel, {
                                         cls: "x-btn-text-icon",
                                         icon: "static/repo/images/delete.png",
                                         handler: function (b, e) {
-                                            if (MA.IsAdmin || MA.IsNodeRep) {
+                                            if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep) {
                                                 var grid = self.getComponent("grid");
                                                 var selections = grid.getSelectionModel().getSelections();
                         
@@ -1025,7 +1025,7 @@ MA.LoadProject = function (projId) {
 
                                                  //enable or disable Add/Remove project managers based on access
                                                  var showAddRemove = false;
-                                                 if (MA.IsAdmin || MA.IsNodeRep) {
+                                                 if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep) {
                                                      showAddRemove = true;
                                                  }
 

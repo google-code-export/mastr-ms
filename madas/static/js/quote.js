@@ -1059,7 +1059,7 @@ MA.ViewFormalInit = function(paramArray){
 
     //if node rep or admin, disable the user edit fields
     for (var i = 0; i < quoteRequestEditCmp.items.length; i++) {
-        if (MA.IsNodeRep || MA.IsAdmin) {
+        if (MA.CurrentUser.IsNodeRep || MA.CurrentUser.IsAdmin) {
             if (
                 quoteRequestEditCmp.items.get(i).getId() != 'quov-hidden-id' &&
                 quoteRequestEditCmp.items.get(i).getId() != 'quov-qid' &&
@@ -1071,7 +1071,7 @@ MA.ViewFormalInit = function(paramArray){
         }
     }
     
-    if (MA.IsNodeRep || MA.IsAdmin) {
+    if (MA.CurrentUser.IsNodeRep || MA.CurrentUser.IsAdmin) {
         Ext.getCmp('fquoadminmode').show();
     } else {
         Ext.getCmp('fquoadminmode').hide();
