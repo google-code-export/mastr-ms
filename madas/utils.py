@@ -20,8 +20,8 @@ def makeJsonFriendly(data):
     '''Will traverse a dict or list compound data struct and
        make any datetime.datetime fields json friendly
     '''
-    #print 'makeJsonFriendly called with data: ', str(data)
-    #print 'which was a ', type(data)
+    print 'makeJsonFriendly called with data: ', str(data)
+    print 'which was a ', type(data)
     try:
         if isinstance(data, list):
             #print 'handling list'
@@ -42,6 +42,7 @@ def makeJsonFriendly(data):
             return data #unmodified
     except Exception, e:
         print 'makeJsonFriendly encountered an error: ', str(e)
+    print 'end makeJsonFriendly'    
     return data
 
 # ------------------------------------------------------------------------------
@@ -166,38 +167,39 @@ def uniqueList(l):
 #
 #    return cachedgroups
 
-def setRequestVars(request, success=False, authenticated = 0, authorized = 0, totalRows = 0, user={}, mainContentFunction = '', username='', params = None, items=None, data=None):
-    """Make sure we set the session vars the same way each time, with sensible defaults"""
-    
-    if params is None:
-        p = request.REQUEST.get('params', None)
-        if p is not None:
-            p = json_decode(p)
-            print '\tSet Request Vars decoded params as : ', p
-        params = p
-    
-    print '\tSet Request Vars params are ', params
 
-    store = {}
-    store['success']              = success
-    store['authenticated']        = authenticated
-    store['authorized']           = authorized
-    store['totalRows']            = totalRows
-    store['mainContentFunction']  = mainContentFunction
-    store['params']               = params
-    store['user']                 = user
-    #print 'Setting params. ', params, 'Type was: ', type(request.store['params'])
-    if items is None:
-        store['items']            = items
-    else:
-        store['items']            = list(items)
-    #print 'setSessionVars, mainContentFunction is: ', request.store['mainContentFunction'] 
-    
-    if data is not None:
-        store['data'] = data
-
-    #set the store on the session
-    request.session['store'] = store
+#def setRequestVars(request, success=False, authenticated = 0, authorized = 0, totalRows = 0, user={}, mainContentFunction = '', username='', params = None, items=None, data=None):
+#    """Make sure we set the session vars the same way each time, with sensible defaults"""
+#    
+#    if params is None:
+#        p = request.REQUEST.get('params', None)
+#        if p is not None:
+#            p = json_decode(p)
+#            print '\tSet Request Vars decoded params as : ', p
+#        params = p
+#    
+#    print '\tSet Request Vars params are ', params
+#
+#    store = {}
+#    store['success']              = success
+#    store['authenticated']        = authenticated
+#    store['authorized']           = authorized
+#    store['totalRows']            = totalRows
+#    store['mainContentFunction']  = mainContentFunction
+#    store['params']               = params
+#    store['user']                 = user
+#    #print 'Setting params. ', params, 'Type was: ', type(request.store['params'])
+#    if items is None:
+#        store['items']            = items
+#    else:
+#        store['items']            = list(items)
+#    #print 'setSessionVars, mainContentFunction is: ', request.store['mainContentFunction'] 
+#    
+#    if data is not None:
+#        store['data'] = data
+#
+#    #set the store on the session
+#    request.session['store'] = store
 
 def get_var(dictionary, key, defaultvalue):
     if dictionary.has_key(key):
@@ -240,7 +242,29 @@ def param_remap(d):
             d['qid'] = v
     return d
 
-def jsonResponse(request, *args):
+def jsonResponse(request, args, success=True, data={}, items=None, mainContentFunction=None, params=None):
+    totalrows = len(data)
+    version = 1
+    response = {'value': {'items':makeJsonFriendly(items), 'version':1, 'total_count':totalrows}}
+
+    
+    retval = {'success': success, 
+              'data':makeJsonFriendly(data), 
+              #'authorized':True, 
+              #'authenticated':True, 
+              'totalRows':totalrows,
+              'response': response 
+              }
+    if params:
+        retval['params'] = params
+    if mainContentFunction:
+        retval['mainContentFunction'] = mainContentFunction
+
+    print 'jsonResponse Encoding data'
+    retdata = json.dumps(retval)
+    print 'jsonResponse Returning data'
+    return HttpResponse(retdata)
+    '''
     #print 'Using jsonResponse'
     s = request.session.get('store', {} )
     a = {}
@@ -287,6 +311,7 @@ def jsonResponse(request, *args):
     request.session['store'] = {}
     
     return HttpResponse(retdata)
+    '''
 
 import os
 import zipfile
