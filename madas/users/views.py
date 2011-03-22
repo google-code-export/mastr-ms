@@ -1,6 +1,6 @@
 # Create your views here.
 from django.contrib.auth.ldap_helper import LDAPHandler
-from madas.utils import setRequestVars, jsonResponse, translate_dict, makeJsonFriendly
+from madas.utils import jsonResponse, translate_dict, makeJsonFriendly
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
@@ -133,10 +133,8 @@ def userload(request, *args):
     d = [_userload(u)]
 
     d = makeJsonFriendly(d)
-
-    setRequestVars(request, success=True, data=d, totalRows=1, authenticated=True, authorized=True)
     print '***userload : exit ***' 
-    return jsonResponse(request, [])   
+    return jsonResponse(request, [], data=d)   
 
 
 
@@ -167,7 +165,8 @@ def _usersave(request, username, admin=False):
     connection can be made.'''
     r = request.REQUEST
     u = username
-   
+    currentuser = getCurrentUser(request)
+
     originalEmail = str(u)
     username = str(r.get('email', originalEmail)) #if empty, set to originalEmail
     email = str(r.get('email', originalEmail)) #if empty, set to originalEmail
@@ -253,7 +252,7 @@ def _usersave(request, username, admin=False):
     print 'Node is ', node
 
     #don't let a non-admin change their node
-    if request.session.has_key('isAdmin') and request.session['isAdmin'] and admin:
+    if currentuser.IsAdmin and admin:
         #TODO do something with the new status
         if node != '': #empty string is 'Don't Know' 
             newnode = [node] #only allow one 'newnode'
@@ -284,7 +283,7 @@ def _usersave(request, username, admin=False):
         print '\tException when updating user %s: %s' % (u, str(e))
    
     #only trust the isAdmin checkbox if editing user is an admin
-    if request.session.has_key('isAdmin') and request.session['isAdmin'] and admin:
+    if currentuser.IsAdmin and admin:
         #honour 'isAdmin' checkbox
         if isAdmin is not None:
             if isAdmin:
@@ -322,7 +321,7 @@ def _usersave(request, username, admin=False):
     else: #user wasnt an admin
         print 'Non admin user. No node updates performed'
 
-    if admin and (request.session['isAdmin'] or request.session['isNodeRep']):
+    if admin and (currentuser.IsAdmin or currentuser.IsNodeRep):
         #honour 'isNodeRep' checkbox
         if isNodeRep is not None:
             if isNodeRep: 
@@ -359,9 +358,9 @@ def _usersave(request, username, admin=False):
         print 'Non admin/node-rep user. No Status updates performed.'
 
     #force a new lookup of the users' groups to be cached, in case the modified user is the logged in user.
-    getCurrentUser().refresh() 
+    currentuser = getCurrentUser(request, force_refresh=True) 
 
-    if status is None or not request.session['isAdmin']:
+    if status is None or not currentuser.IsAdmin:
         return oldstatus, oldstatus
     else:
         return oldstatus, status
@@ -379,10 +378,9 @@ def userSave(request, *args):
 
     from mail_functions import sendAccountModificationEmail
     sendAccountModificationEmail(request, u)
-    setRequestVars(request, success=True, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='user:myaccount')
 
     print '***users/userSave : exit ***' 
-    return jsonResponse(request, [])
+    return jsonResponse(request, [], mainContentFunction='user:myaccount')
 
 def getNodeMemberships(groups):
     if groups is None:

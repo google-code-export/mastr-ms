@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers
 from django.db.models import get_model
 from json_util import makeJsonFriendly
-from madas.utils import setRequestVars, jsonResponse, zipdir
+from madas.utils import jsonResponse, zipdir
 from madas.repository.permissions import user_passes_test
 from django.db.models import Q
 from datetime import datetime, timedelta

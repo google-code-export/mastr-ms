@@ -2,13 +2,6 @@ from django.utils import simplejson
 from django.contrib.auth.ldap_helper import LDAPHandler
 
 
-#Gets the MAUser object out of the session.
-def getCurrentUser(request):
-    if not request.session.get('mauser', False):
-        request.session['mauser'] = MAUser();
-        MAUser.refresh();
-    return request.session['mauser']
-
 #Just a class to encapsulate data to send to the frontend (as json)
 class MAUser(object):
     def __init__(self):
@@ -105,3 +98,13 @@ class MAUser(object):
         return self._dict
     def toJson(self):
         return simplejson.dumps(self._dict)
+
+#Gets the MAUser object out of the session.
+def getCurrentUser(request, force_refresh = False):
+    if force_refresh or not request.session.get('mauser', False):
+        mauser = MAUser()
+        mauser.refresh(request)
+        request.session['mauser'] = mauser;
+    return request.session['mauser']
+
+        

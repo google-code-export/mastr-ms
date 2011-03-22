@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.contrib.auth.models import User
 
-from madas.utils import setRequestVars, jsonResponse, json_encode, translate_dict
+from madas.utils import jsonResponse, json_encode, translate_dict
 from madas.quote.models import Quoterequest, Formalquote, Organisation, UserOrganisation
 from django.db.models import Q
 from madas.repository.json_util import makeJsonFriendly
@@ -57,9 +57,8 @@ def admin_requests(request, *args):
         print 'admin_requests: Exception: ', str(e)   
 
     print '***admin requests : exit***'
-    setRequestVars(request, success=True, items=newlist, totalRows=len(newlist), authenticated=True, authorized=True)
 
-    return jsonResponse(request, [])  
+    return jsonResponse(request, [], items=newlist)  
 
 def setup_groups(request, *args):
     return jsonResponse(request, []) 
@@ -124,8 +123,7 @@ def user_search(request, *args):
 
 
 
-    setRequestVars(request, success=True, items=newlist, totalRows=len(newlist), authenticated=True, authorized=True)
-    return jsonResponse(request, []) 
+    return jsonResponse(request, [], items=newlist) 
 
 def rejected_user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Rejected User Search
@@ -166,9 +164,8 @@ def rejected_user_search(request, *args):
             newlist.append(d)
     except Exception, e:
         print '\tEXCEPTION: ', str(e)
-    setRequestVars(request, success=True, items=newlist, totalRows=len(newlist), authenticated=True, authorized=True)
     print '***rejected_user_search : exit ***' 
-    return jsonResponse(request, []) 
+    return jsonResponse(request, [], items=newlist) 
 
 def deleted_user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Deleted User Search
@@ -205,9 +202,8 @@ def deleted_user_search(request, *args):
     except Exception, e:
         print str(e)
     print '\tNewList: ', newlist
-    setRequestVars(request, success=True, items=newlist, totalRows=len(newlist), authenticated=True, authorized=True)
     print '***deleted_user_search : exit ***' 
-    return jsonResponse(request, []) 
+    return jsonResponse(request, [], items=newlist) 
 
 def user_load(request, *args):
     '''This is called when an admin user opens up an individual user record
@@ -229,9 +225,8 @@ def user_load(request, *args):
         print str(e)
         pass
 
-    setRequestVars(request, success=True, data=d, totalRows=len(d.keys()), authenticated=True, authorized=True)
     print '***admin/user_load : exit ***' 
-    return jsonResponse(request, [])
+    return jsonResponse(request, [], data=d)
 
 def user_save(request, *args):
     '''This is called when an admin user hits save on an individual user record
@@ -287,14 +282,9 @@ def user_save(request, *args):
     except:
         print 'FATAL error adding or removing user from organisation'
 
-    setRequestVars(request, success=True, authenticated=True, authorized=True, mainContentFunction = nextview)
     print '***admin/user_save : exit ***' 
 
-    return jsonResponse(request, []) 
-
-def list_groups(request, *args):
-    pass
-    #return jsonResponse(request, []) 
+    return jsonResponse(request, [], mainContentFunction=nextview) 
 
 def node_save(request, *args):
     '''This is called when saving node details in the Node Management.
@@ -321,9 +311,8 @@ def node_save(request, *args):
             returnval = ld.ldap_rename_group(oldname, newname)
     print '\tnode_save: returnval was ', returnval      
     #TODO: the javascript doesnt do anything if returnval is false...it just looks like nothing happens.
-    setRequestVars(request, success=returnval, authenticated=True, authorized=True, mainContentFunction='admin:nodelist')
     print '*** node_save : exit ***'
-    return jsonResponse(request, []) 
+    return jsonResponse(request, [], success=returnval, mainContentFunction='admin:nodelist') 
 
 def node_delete(request, *args):
     '''This is called when saving node details in the Node Management.
@@ -342,9 +331,8 @@ def node_delete(request, *args):
         ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
         ret = ld.ldap_delete_group(delname)
 
-    setRequestVars(request, success=True, authenticated=True, authorized=True, mainContentFunction='admin:nodelist')
     print '*** node_delete : enter ***'
-    return jsonResponse(request, []) 
+    return jsonResponse(request, [], mainContentFunction='admin:nodelist') 
 
 def org_save(request):
 

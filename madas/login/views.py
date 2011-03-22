@@ -2,7 +2,7 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.webhelpers import siteurl
 
-from madas.utils import setRequestVars, jsonResponse
+from madas.utils import jsonResponse
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.utils import simplejson
 from users.MAUser import MAUser
@@ -105,7 +105,6 @@ def processLogin(request, *args):
         params = params
 
         print '\tprocessLogin, mainContentFunction: ', mainContentFunction
-        setRequestVars(request, success=success, user = madasuser.getData(), authorized = authorized, authenticated = authenticated, mainContentFunction = mainContentFunction)
 
     print '*** processLogin : exit ***'
     return success 
@@ -118,7 +117,6 @@ def processLogout(request, *args):
     print '*** processLogout : enter***'
     print '\tlogging out (django)'
     logout(request) #let Django log the user out
-    setRequestVars(request, success=True, mainContentFunction = 'login')
     print '*** processLogout : exit***'
     return HttpResponseRedirect(siteurl(request)) 
 
@@ -163,9 +161,8 @@ def processForgotPassword(request, *args):
     p = {}
     p['message'] = "An email has been sent to %s. Please follow the instructions in that email to continue" % (emailaddress)
 
-    setRequestVars(request, success=True, authorized = True, params = p, mainContentFunction='message')
     print '*** processForgotPassword : exit***'
-    return jsonResponse(request, args) 
+    return jsonResponse(request, args, params=p, mainContentFunction='message') 
 
 def forgotPasswordRedirect(request, *args):
     print '\tEntered forgot password'
@@ -178,7 +175,6 @@ def forgotPasswordRedirect(request, *args):
         from django.http import HttpResponseRedirect
         
         return HttpResponseRedirect(siteurl(request))
-        #return jsonResponse(request, args) 
     except Exception, e:
         print str(e)
 
@@ -190,9 +186,8 @@ def populateResetPasswordForm(request, *args):
     data['validationKey'] = request.session['resetPasswordValidationKey']
     print '\tData: ', data
 
-    setRequestVars(request, success = True, items = [data], authenticated = False, authorized = True, totalRows = 1)
     print '***populateResetPasswordForm***: exit'
-    return jsonResponse(request, args) 
+    return jsonResponse(request, args, items=[data]) 
 
 def processResetPassword(request, *args):
     print '***populateResetPasswordForm***: enter'
@@ -225,9 +220,8 @@ def processResetPassword(request, *args):
         print 'Argument error'
         success = False
         request.session.flush() #if we don't flush here, we are leaving the redirect function the same.
-    setRequestVars(request, success = success, authenticated = False, authorized = True, totalRows = 0, mainContentFunction = 'login')
     print '***populateResetPasswordForm***: exit'
-    return jsonResponse(request, args) 
+    return jsonResponse(request, args, success=success, mainContentFunction='login') 
 
 def unauthenticated(request, *args):
     return jsonResponse(request, args) 
@@ -236,7 +230,6 @@ def unauthorized(request, *args):
     print 'executed Login:unauthorized'
     authorized = False
     mainContentFunction = 'notauthorized'
-    setRequestVars(request, mainContentFunction = mainContentFunction)
     #TODO now go to 'pager' with action 'index'
-    return jsonResponse(request, args) 
+    return jsonResponse(request, args, mainContentFunction=mainContentFunction) 
 
