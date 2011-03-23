@@ -213,16 +213,20 @@ def user_load(request, *args):
     print '***admin/user_load : enter ***' 
     import madas.users 
     from madas.users.views import _userload
+    print '\tloading user'
     d = _userload(request.REQUEST['username'])
+    print '\tfinished loading user'
     
     #find user organisation
     try:
         u = User.objects.get(username=request.REQUEST['username'])
         orgs = UserOrganisation.objects.filter(user=u)
-        d['organisation'] = orgs[0].organisation.id
-        print 'user in org ' + orgs[0].organisation.id
+        d['organisation'] = ''
+        if len(orgs) > 0:
+            d['organisation'] = orgs[0].organisation.id
+            print 'user in org %d' % (orgs[0].organisation.id)
     except Exception, e:
-        print str(e)
+        print 'Exception ', str(e)
         pass
 
     print '***admin/user_load : exit ***' 

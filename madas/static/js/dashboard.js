@@ -38,7 +38,7 @@ MA.Dashboard.CreatePendingUserRequests = function() {
 
 
     function editUser(username) {
-        MA.Authorize('admin:useredit', username);
+        MA.ChangeMainContent('admin:useredit', username);
     }
 
     var editHandler = function(el, ev) {
@@ -125,7 +125,7 @@ MA.Dashboard.CreateQuotesRequiringAttention = function() {
 
     var dataurl = MA.BaseUrl + "quote/listNeedsAttention";
     var editQuote = function(quote_id) {
-        MA.Authorize('quote:edit', [quote_id]);
+        MA.ChangeMainContent('quote:edit', [quote_id]);
     };
     var quoteEditHandler = function(el, ev) {
         if (selectionModel.hasSelection()) {

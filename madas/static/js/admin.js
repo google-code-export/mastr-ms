@@ -45,7 +45,7 @@ MA.AdminRequestsInit = function(){
                                          });
     var editHandler = function(el, ev) {
         if (selectionModel.hasSelection()) {
-            MA.Authorize('admin:useredit', [selectionModel.getSelected().data['username']]);
+            MA.ChangeMainContent('admin:useredit', [selectionModel.getSelected().data['username']]);
         }
     };
     var topToolbar = new Ext.Toolbar({
@@ -134,7 +134,7 @@ MA.UserSearchInit = function(){
                                              ]);
     var editHandler = function(el, ev) {
         if (selectionModel.hasSelection()) {
-            MA.Authorize('admin:useredit', [selectionModel.getSelected().data['username']]);
+            MA.ChangeMainContent('admin:useredit', [selectionModel.getSelected().data['username']]);
         }
     };
     var topToolbar = new Ext.Toolbar({
@@ -212,7 +212,7 @@ MA.RejectedUserSearchInit = function(){
                                              ]);
     var editHandler = function(el, ev) {
         if (selectionModel.hasSelection()) {
-            MA.Authorize('admin:useredit', [selectionModel.getSelected().data['username']]);
+            MA.ChangeMainContent('admin:useredit', [selectionModel.getSelected().data['username']]);
         }
     };
     var topToolbar = new Ext.Toolbar({
@@ -290,7 +290,7 @@ MA.DeletedUserSearchInit = function(){
                                              ]);
     var editHandler = function(el, ev) {
         if (selectionModel.hasSelection()) {
-            MA.Authorize('admin:useredit', [selectionModel.getSelected().data['username']]);
+            MA.ChangeMainContent('admin:useredit', [selectionModel.getSelected().data['username']]);
         }
     };
     var topToolbar = new Ext.Toolbar({
@@ -604,7 +604,7 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
                  text: 'Cancel',
                  handler: function(){
                  Ext.getCmp('adminuseredit-panel').getForm().reset(); 
-                 MA.Authorize(MA.CancelBackTarget)
+                 MA.ChangeMainContent(MA.CancelBackTarget)
                  }
                  },{
                  text: 'Save',

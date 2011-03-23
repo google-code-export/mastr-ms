@@ -68,7 +68,7 @@ MA.LoginExecute = function(paramArray){
                                                 params = MA.PostLoginParamArray[1];
                                             }
                                             
-                                            MA.Authorize(resultContent, params);
+                                            MA.ChangeMainContent(resultContent, params);
                                         } 
                                     },
                                     failure: function (form, action) {
@@ -96,7 +96,6 @@ MA.ForgotPasswordExecute = function(){
                         };
 
 MA.RequestQuoteButtonHandler = function() {
-    //MA.Authorize('quote:request');
     MA.ChangeMainContent('quote:request');
 };
 
@@ -112,7 +111,7 @@ MA.LoginCmp = {id:'login-container-panel',
                        y:10,
                        items: [{
                                xtype:'panel',
-                               html:'Welcome to the <a href="http://www.metabolomics.net.au/">Metabolomics Australia</a> User and Quote Management System. This site allows existing and prospective clients of Metabolomics Australia to obtain a quote for accessing the many services offered my Metabolomics Australia.                               <p> <br>                              To make an inquiry about any of the services offered by Metabolomics Australia, clients are encouraged to fill out an online inquiry form by clicking the "Make an Inquiry" button, below.                               <p> <br>                              Existing clients can login to the website using the form to the right, or if required request a new password by <a href="#" onclick="MA.Authorize(\'login:forgotpassword\')">clicking here</a>.<br><br>'
+                               html:'Welcome to the <a href="http://www.metabolomics.net.au/">Metabolomics Australia</a> User and Quote Management System. This site allows existing and prospective clients of Metabolomics Australia to obtain a quote for accessing the many services offered my Metabolomics Australia.                               <p> <br>                              To make an inquiry about any of the services offered by Metabolomics Australia, clients are encouraged to fill out an online inquiry form by clicking the "Make an Inquiry" button, below.                               <p> <br>                              Existing clients can login to the website using the form to the right, or if required request a new password by <a href="#" onclick="MA.ChangeMainContent(\'login:forgotpassword\')">clicking here</a>.<br><br>'
                                },
                                {
                                xtype:'button',
@@ -142,7 +141,7 @@ MA.LoginCmp = {id:'login-container-panel',
                             el:"loginDiv"
                         },
                             {xtype:'panel', width: 350, style:'padding-top:4px;padding-left:80px;', html: '<a href="#" onclick="MA.ChangeMainContent(\'registration\')">Click here</a> to register for an account' },
-                        {xtype:'panel', width: 350, style:'padding-top:4px;padding-left:80px;', html: '<a href="#" onclick="MA.Authorize(\'login:forgotpassword\')">Forgot your password?</a>' }
+                        {xtype:'panel', width: 350, style:'padding-top:4px;padding-left:80px;', html: '<a href="#" onclick="MA.ChangeMainContent(\'login:forgotpassword\')">Forgot your password?</a>' }
                     ]}
                     ]
                 };
@@ -178,7 +177,7 @@ MA.ForgotPasswordCmp = {id:'forgot-password-container-panel',
                         text: 'Cancel',
                         handler: function(){
                             Ext.getCmp('forgot-password-panel').getForm().reset(); 
-                            MA.Authorize('login');
+                            MA.ChangeMainContent('login');
                             }
                         },{
                         text: 'Submit',
@@ -349,7 +348,7 @@ MA.ResetPasswordCmp = {id:'resetpassword-container-panel',
                         text: 'Cancel',
                         handler: function(){
                             Ext.getCmp('resetpassword-panel').getForm().reset(); 
-                            MA.Authorize('login');
+                            MA.ChangeMainContent('login');
                             }
                         },{
                         text: 'Save',
