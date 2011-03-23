@@ -33,7 +33,7 @@ MA.RequestQuoteInit = function () {
 
     //fetch user details
     reqQuoCmp.load({url: MA.BaseUrl + 'user/userload', waitMsg:'Loading'});
-
+    console.log('Request Quote');
     //reqQuoCmp.doLayout();
     
     return;
