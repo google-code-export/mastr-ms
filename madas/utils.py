@@ -20,8 +20,8 @@ def makeJsonFriendly(data):
     '''Will traverse a dict or list compound data struct and
        make any datetime.datetime fields json friendly
     '''
-    print 'makeJsonFriendly called with data: ', str(data)
-    print 'which was a ', type(data)
+    #print 'makeJsonFriendly called with data: ', str(data)
+    #print 'which was a ', type(data)
     try:
         if isinstance(data, list):
             #print 'handling list'
@@ -42,7 +42,7 @@ def makeJsonFriendly(data):
             return data #unmodified
     except Exception, e:
         print 'makeJsonFriendly encountered an error: ', str(e)
-    print 'end makeJsonFriendly'    
+    #print 'end makeJsonFriendly'    
     return data
 
 # ------------------------------------------------------------------------------
