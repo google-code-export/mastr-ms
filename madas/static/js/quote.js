@@ -378,7 +378,7 @@ MA.QuoteRequestListInit = function(){
                     sel = list.getSelectedRecords()[0];
                     list.clearSelections(true);
                     //MA.Authorize('quote:viewformal', {"qid" : sel.data.quoterequestid});
-                    MA.Authorize('quote:viewformal', {"qid" : sel.data.quoterequestid});
+                    MA.ChangeMainContent('quote:viewformal', {"qid" : sel.data.quoterequestid});
                 }
             }
         },

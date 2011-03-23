@@ -243,7 +243,12 @@ def param_remap(d):
     return d
 
 def jsonResponse(request, args, success=True, data={}, items=None, mainContentFunction=None, params=None):
-    totalrows = len(data)
+    #Sometimes we are passed 'data', and sometimes 'items'. We need to make
+    #a decision based on which one we are going to use for the 'totalRows'.
+    if items:
+        totalrows = len(items)
+    else:    
+        totalrows = len(data)
     version = 1
     response = {'value': {'items':makeJsonFriendly(items), 'version':1, 'total_count':totalrows}}
 
