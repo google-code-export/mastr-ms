@@ -13,10 +13,10 @@ from django.utils import simplejson as json
 from django.conf import settings
 from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
 from django.contrib.auth.decorators import login_required
-from madas.decorators import admins_only
+from madas.decorators import admins_only, admins_or_nodereps
 from madas.users.MAUser import getCurrentUser
 
-@admins_only
+@admins_or_nodereps
 def admin_requests(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active Requests
        Accessible by Administrators, Node Reps

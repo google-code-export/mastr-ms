@@ -1,10 +1,7 @@
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseUnauthorized
 from madas.users.MAUser import MAUser
 
-#We check the user is logged in,
-#and then grab the user details off the session,
-#including cached groups
-def admins_only(f):
+def restricted_view(f, restriction):
     def new_function(*args, **kwargs):
         request = args[0]
         if not request.user.is_authenticated():
@@ -16,8 +13,19 @@ def admins_only(f):
             mauser.refresh()
             mauser = request.session.get('mauser', None)
 
-        if mauser.IsAdmin:
+        if restriction(mauser):
             return f(*args, **kwargs)
         else:
             return HttpResponseForbidden()
     return new_function
+
+
+def nodereps_only(f):
+    return restricted_view(f, lambda u: u.IsNodeRep)
+
+def admins_only(f):
+    return restricted_view(f, lambda u: u.IsAdmin)
+
+def admins_or_nodereps(f):
+    return restricted_view(f, lambda u: u.IsAdmin or u.IsNodeRep)
+
