@@ -25,6 +25,6 @@ def submit(request, *args):
         #setRequestVars(request, success=False, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='error:existingRegistration')
 
         # TODO error type in mainContentFunction ??? WTF?
-        return jsonResponse(request, [], mainContentFunction='error:existingRegistration')
+        return jsonResponse(request, [], success=False, mainContentFunction='error:existingRegistration')
     print '*** registration/submit end ***' 
     #return jsonResponse(request, [])
