@@ -242,7 +242,7 @@ def param_remap(d):
             d['qid'] = v
     return d
 
-def jsonResponse(request, args, success=True, data={}, items=None, mainContentFunction=None, params=None):
+def jsonResponse(success=True, data={}, items=None, mainContentFunction=None, params=None):
     #Sometimes we are passed 'data', and sometimes 'items'. We need to make
     #a decision based on which one we are going to use for the 'totalRows'.
     if items:

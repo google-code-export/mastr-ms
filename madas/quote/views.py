@@ -41,7 +41,7 @@ def listGroups(request, *args):
             groups.append(d)       
     
          
-    return jsonResponse(request, [], items=groups)
+    return jsonResponse(items=groups)
     
 
 def listRestrictedGroups(request, *args):
@@ -64,7 +64,7 @@ def listRestrictedGroups(request, *args):
             
             groups.append({'name':'Don\'t Know', 'submitValue':''})
         
-        retval = jsonResponse(request, [], items=groups)
+        retval = jsonResponse(items=groups)
     print '*** list Restricted Groups : exit ***'
     return retval 
 
@@ -174,7 +174,7 @@ def sendRequest(request, *args):
         print 'Error sending mail in SendRequest: ', str(e)
 
     print '*** quote:sendRequest: exit ***'
-    return jsonResponse(request, [], mainContentFunction='quote:request')       
+    return jsonResponse( mainContentFunction='quote:request')       
 
 def listQuotesRequiringAttention(request):
     '''Used by dashboard to list the quotes that aren't Completed and don't have
@@ -202,7 +202,7 @@ def listQuotesRequiringAttention(request):
 
     results = []
 
-    return jsonResponse(request, [], items=resultsset)
+    return jsonResponse( items=resultsset)
 
 
 def listQuotes(request, *args):
@@ -261,7 +261,7 @@ def listQuotes(request, *args):
     print '\tfinished generating quoteslist' 
 
     print '*** quote/listQuotes : exit *** '
-    return jsonResponse(request, [], items=resultsset)       
+    return jsonResponse( items=resultsset)       
     
 def listAll(request, *args):
     '''This corresponds to Madas Dashboard->Quotes->Overview List
@@ -325,7 +325,7 @@ def listAll(request, *args):
     #$sql = "select qr.id, qr.completed, qr.unread, qr.tonode, qr.firstname, qr.lastname, qr.officephone, qr.details, to_char(qr.requesttime, 'YYYY/MM/DD HH24:MI:SS') as requesttime, em.emailaddress as email, to_char(qrh.changetimestamp, 'YYYY/MM/DD HH24:MI:SS') as changetimestamp from quoterequest as qr left join (select max(changetimestamp) as changetimestamp, quoteid from quotehistory where completed = true group by quoteid) as qrh on qr.id = qrh.quoteid left join emailmap em on em.id = qr.emailaddressid";
 
     print '*** quote/listAll - exit ***'
-    return jsonResponse(request, [], items=resultsset) 
+    return jsonResponse( items=resultsset) 
 
 
 def listFormal(request, *args, **kwargs):
@@ -356,7 +356,7 @@ def listFormal(request, *args, **kwargs):
         fquoteslist = fquoteslist.filter(quoterequestid=qid)
 
     print '*** listFormal : exit ***'
-    return jsonResponse(request, [], items=list(fquoteslist)) 
+    return jsonResponse( items=list(fquoteslist)) 
 
 def _loadQuoteRequest(qid):
     print '\tload: qid was ', qid
@@ -401,7 +401,7 @@ def load(request, *args):
 
     #TODO: mark quote as 'read' if not already.: updateQuoteRequestStatus($qid, $data['tonode'], ($data['completed'])?1:0, 0);
     print '*** load : exit ***'
-    return jsonResponse( request, [], data=qr, success=suc )
+    return jsonResponse(  data=qr, success=suc )
     
 def history(request, *args):
     print '***quote/history : enter***'
@@ -419,7 +419,7 @@ def history(request, *args):
     qh.reverse()
     print '\t', qh 
     print '***quote/history : exit***'
-    return jsonResponse( request, [], data = qh )
+    return jsonResponse( data = qh )
 
 
 def _getEmailMapping(email):
@@ -508,7 +508,7 @@ def save(request, *args):
     retval = _addQuoteHistory(qr, email, toNode, qr.tonode, comment, completed, qr.completed)
 
     print '*** quote: save : exit ***'
-    return jsonResponse(request, [], mainContentFunction='quote:list') 
+    return jsonResponse( mainContentFunction='quote:list') 
      
 
 
@@ -581,7 +581,7 @@ def formalLoad(request, *args, **kwargs):
         
     #setRequestVars(request, success=True, data=retvals, totalRows=1, params=[], authenticated=True, authorized=True) 
     print '***formalLoad : exit ***'
-    return jsonResponse(request, [], data=retvals) 
+    return jsonResponse(data=retvals) 
               
 def addFormalQuote(fromemail, toemail, quoterequestid, details):
     '''adds a formal quote to the database'''
@@ -690,7 +690,7 @@ def formalSave(request, *args):
     #setRequestVars(request, data=None, totalRows=0, authenticated=True, authorized=True, success=True, mainContentFunction = 'quote:list') 
     #print '\tDone setting request vars'
     print '***formalSave : exit ***'
-    return jsonResponse(request, [], mainContentFunction='quote:list') 
+    return jsonResponse( mainContentFunction='quote:list') 
 
 
 def setFormalQuoteStatus(quoteobject, status):
@@ -769,7 +769,7 @@ def formalAccept(request, *args):
 
     #setRequestVars(request, success=not failed, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='dashboard')
     print '*** formalAccept: exit ***'
-    return jsonResponse(request, [], success=not failed, mainContentFunction='dashboard')
+    return jsonResponse( success=not failed, mainContentFunction='dashboard')
 
 
 
@@ -800,7 +800,7 @@ def formalReject(request, *args):
             print 'DEBUG Exception: ', str(e)
     #TODO: base success on email success? qr != None?
     print '***formalReject : exit ***'
-    return jsonResponse(request, [], mainContentFunction='dashboard') 
+    return jsonResponse( mainContentFunction='dashboard') 
 
 
 
