@@ -401,6 +401,7 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
            frame:true,
            reader: new Ext.data.JsonReader({
                                                  root            : 'data',
+                                                 idProperty      : 'username',
                                                  versionProperty : 'response.value.version',
                                                  totalProperty   : 'response.value.total_count',
                                                  successProperty : 'success'
@@ -620,8 +621,8 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
                                                                     Ext.Msg.alert("User details saved successfully", "(this message will auto-close in 5 seconds)");
                                                                     setTimeout("Ext.Msg.hide()", 5000);
                                                                     
-                                                                    //load up the menu and next content area as declared in response
-                                                                    MA.ChangeMainContent(action.result.mainContentFunction);
+                                                                    //MA.ChangeMainContent(action.result.mainContentFunction);
+                                                                    MA.ChangeMainContent(MA.CancelBackTarget)
                                                                     } 
                                                                     },
                                                                     failure: function (form, action) {
