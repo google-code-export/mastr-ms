@@ -149,9 +149,9 @@ def authorize(request, module='/', perms = [], internal = False):
 
     print '*** authorize : exit ***'
     if not internal:
-        return jsonResponse(request, []) 
+        return jsonResponse() 
     else:
-        return (aa, jsonResponse(request, []) )  
+        return (aa, jsonResponse() )  
 
 from django.template import Context, loader
 
@@ -251,7 +251,7 @@ def processLogout(request, *args):
     logout(request) #let Django log the user out
     setRequestVars(request, success=True, mainContentFunction = 'login')
     print '*** processLogout : exit***'
-    return jsonResponse(request, [])
+    return jsonResponse()
 
 def serverinfo(request):
     return render_mako('serverinfo.mako', s=settings, request=request, g=globals() )

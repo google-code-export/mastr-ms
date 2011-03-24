@@ -109,8 +109,9 @@ def processLogin(request, *args):
     print '*** processLogin : exit ***'
     return success 
 
+### TODO: not sure this function is even needed
 def index(request, *args):
-    return jsonResponse(request, args) 
+    return jsonResponse() 
 
 def processLogout(request, *args):
     from django.contrib.auth import logout
@@ -162,7 +163,7 @@ def processForgotPassword(request, *args):
     p['message'] = "An email has been sent to %s. Please follow the instructions in that email to continue" % (emailaddress)
 
     print '*** processForgotPassword : exit***'
-    return jsonResponse(request, args, params=p, mainContentFunction='message') 
+    return jsonResponse(params=p, mainContentFunction='message') 
 
 def forgotPasswordRedirect(request, *args):
     print '\tEntered forgot password'
@@ -187,7 +188,7 @@ def populateResetPasswordForm(request, *args):
     print '\tData: ', data
 
     print '***populateResetPasswordForm***: exit'
-    return jsonResponse(request, args, items=[data]) 
+    return jsonResponse(items=[data]) 
 
 def processResetPassword(request, *args):
     print '***populateResetPasswordForm***: enter'
@@ -221,15 +222,17 @@ def processResetPassword(request, *args):
         success = False
         request.session.flush() #if we don't flush here, we are leaving the redirect function the same.
     print '***populateResetPasswordForm***: exit'
-    return jsonResponse(request, args, success=success, mainContentFunction='login') 
+    return jsonResponse(success=success, mainContentFunction='login') 
 
+#TODO not sure this function is even needed
 def unauthenticated(request, *args):
-    return jsonResponse(request, args) 
+    return jsonResponse() 
 
+#TODO not sure this function is even needed
 def unauthorized(request, *args):
     print 'executed Login:unauthorized'
     authorized = False
     mainContentFunction = 'notauthorized'
     #TODO now go to 'pager' with action 'index'
-    return jsonResponse(request, args, mainContentFunction=mainContentFunction) 
+    return jsonResponse(mainContentFunction=mainContentFunction) 
 

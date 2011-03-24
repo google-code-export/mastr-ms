@@ -134,7 +134,7 @@ def userload(request, *args):
 
     d = makeJsonFriendly(d)
     print '***userload : exit ***' 
-    return jsonResponse(request, [], data=d)   
+    return jsonResponse(data=d)   
 
 
 
@@ -380,7 +380,7 @@ def userSave(request, *args):
     sendAccountModificationEmail(request, u)
 
     print '***users/userSave : exit ***' 
-    return jsonResponse(request, [], mainContentFunction='user:myaccount')
+    return jsonResponse(mainContentFunction='user:myaccount')
 
 def getNodeMemberships(groups):
     if groups is None:

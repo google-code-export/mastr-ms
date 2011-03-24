@@ -246,7 +246,7 @@ def records(request, model, field, value):
     ### TODO why do we need this, we'll get a 403 from decorator now if not logged in and not in group - ABM
     authenticated = request.user.is_authenticated()
     if not authenticated == True:
-        return jsonResponse(request, [])
+        return jsonResponse()
     ### End Authorisation Check ###
 
     # basic json that we will fill in
@@ -310,7 +310,7 @@ def recent_experiments(request):
      ### TODO why do we need this, we'll get a 403 from decorator now if not logged in and not in group - ABM
     authenticated = request.user.is_authenticated()
     if not authenticated == True:
-        return jsonResponse(request, [])
+        return jsonResponse()
     ### End Authorisation Check ###
     
     # basic json that we will fill in
@@ -352,7 +352,7 @@ def recent_runs(request):
      ### TODO why do we need this, we'll get a 403 from decorator now if not logged in and not in group - ABM
     authenticated = request.user.is_authenticated()
     if not authenticated == True:
-        return jsonResponse(request, [])
+        return jsonResponse()
     ### End Authorisation Check ###
     
     # basic json that we will fill in
@@ -405,7 +405,7 @@ def recordsClientList(request):
     ### TODO why do we need this, we'll get a 403 from decorator now if not logged in and not in group - ABM
     authenticated = request.user.is_authenticated()
     if not authenticated == True:
-        return jsonResponse(request, [])
+        return jsonResponse()
     ### End Authorisation Check ###
     
     # basic json that we will fill in
@@ -488,7 +488,7 @@ def recordsClientFiles(request):
     ### TODO why do we need this, we'll get a 403 from decorator now if not logged in and not in group - ABM
     authenticated = request.user.is_authenticated()
     if not authenticated == True:
-        return jsonResponse(request, [])
+        return jsonResponse()
     ### End Authorisation Check ###
 
     # basic json that we will fill in

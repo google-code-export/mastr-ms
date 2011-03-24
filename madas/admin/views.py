@@ -58,10 +58,7 @@ def admin_requests(request, *args):
 
     print '***admin requests : exit***'
 
-    return jsonResponse(request, [], items=newlist)  
-
-def setup_groups(request, *args):
-    return jsonResponse(request, []) 
+    return jsonResponse(items=newlist)  
 
 def user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active User Search
@@ -123,7 +120,7 @@ def user_search(request, *args):
 
 
 
-    return jsonResponse(request, [], items=newlist) 
+    return jsonResponse(items=newlist) 
 
 def rejected_user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Rejected User Search
@@ -165,7 +162,7 @@ def rejected_user_search(request, *args):
     except Exception, e:
         print '\tEXCEPTION: ', str(e)
     print '***rejected_user_search : exit ***' 
-    return jsonResponse(request, [], items=newlist) 
+    return jsonResponse(items=newlist) 
 
 def deleted_user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Deleted User Search
@@ -203,7 +200,7 @@ def deleted_user_search(request, *args):
         print str(e)
     print '\tNewList: ', newlist
     print '***deleted_user_search : exit ***' 
-    return jsonResponse(request, [], items=newlist) 
+    return jsonResponse(items=newlist) 
 
 def user_load(request, *args):
     '''This is called when an admin user opens up an individual user record
@@ -230,7 +227,7 @@ def user_load(request, *args):
         pass
 
     print '***admin/user_load : exit ***' 
-    return jsonResponse(request, [], data=d)
+    return jsonResponse(data=d)
 
 def user_save(request, *args):
     '''This is called when an admin user hits save on an individual user record
@@ -288,7 +285,7 @@ def user_save(request, *args):
 
     print '***admin/user_save : exit ***' 
 
-    return jsonResponse(request, [], mainContentFunction=nextview) 
+    return jsonResponse(mainContentFunction=nextview) 
 
 def node_save(request, *args):
     '''This is called when saving node details in the Node Management.
@@ -316,7 +313,7 @@ def node_save(request, *args):
     print '\tnode_save: returnval was ', returnval      
     #TODO: the javascript doesnt do anything if returnval is false...it just looks like nothing happens.
     print '*** node_save : exit ***'
-    return jsonResponse(request, [], success=returnval, mainContentFunction='admin:nodelist') 
+    return jsonResponse(success=returnval, mainContentFunction='admin:nodelist') 
 
 def node_delete(request, *args):
     '''This is called when saving node details in the Node Management.
@@ -336,7 +333,7 @@ def node_delete(request, *args):
         ret = ld.ldap_delete_group(delname)
 
     print '*** node_delete : enter ***'
-    return jsonResponse(request, [], mainContentFunction='admin:nodelist') 
+    return jsonResponse(mainContentFunction='admin:nodelist') 
 
 def org_save(request):
 
@@ -354,7 +351,7 @@ def org_save(request):
     
     org.save()
         
-    return jsonResponse(request, [])
+    return jsonResponse()
     
 def org_delete(request):
 
@@ -364,7 +361,7 @@ def org_delete(request):
     rows = Organisation.objects.filter(id=org_id)
     rows.delete()
 
-    return jsonResponse(request, [])
+    return jsonResponse()
 
 def list_organisations(request):
 
