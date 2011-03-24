@@ -214,6 +214,10 @@ MA.ChangeMainContent = function(contentName, paramArray){
             Ext.getCmp("center-panel").layout.setActiveItem("runs-list");
             break;
 
+        case "repo:admin":
+            document.location = 'repoadmin/';
+            break;
+
     	case "help:screencasts-quoterequest":
     	    MA.ScreencastsInit('madas_requesting_quote.flv');
     	    Ext.getCmp('center-panel').layout.setActiveItem('screencasts-container-panel');

@@ -5,10 +5,10 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 #from django.core import serializers
 #from django.utils import simplejson
-from madas.utils import setRequestVars, jsonResponse
+from madas.utils import jsonResponse
 from django.shortcuts import render_to_response, render_mako
 from django.utils.webhelpers import siteurl, wsgibase
-import django.utils.webhelpers as webhelpers
+import dango.utils.webhelpers as webhelpers
 from madas.login.views import processLogin
 from django.contrib.auth.models import User
 

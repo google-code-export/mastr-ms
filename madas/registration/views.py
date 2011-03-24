@@ -1,4 +1,4 @@
-from madas.utils import setRequestVars, jsonResponse, json_encode
+from madas.utils import jsonResponse
 
 
 def submit(request, *args):
@@ -19,9 +19,12 @@ def submit(request, *args):
         
         sendRegistrationToAdminEmail(request, 'trac-nema@ccg.murdoch.edu.au')
         
-        setRequestVars(request, success=True, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='login')
+        #setRequestVars(request, success=True, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='login')
+        return jsonResponse(request, [], mainContentFunction='login')
     else:
-        setRequestVars(request, success=False, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='error:existingRegistration')
+        #setRequestVars(request, success=False, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='error:existingRegistration')
 
+        # TODO error type in mainContentFunction ??? WTF?
+        return jsonResponse(request, [], mainContentFunction='error:existingRegistration')
     print '*** registration/submit end ***' 
-    return jsonResponse(request, [])
+    #return jsonResponse(request, [])
