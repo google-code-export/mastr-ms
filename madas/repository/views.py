@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from madas.utils import jsonResponse
 from django.shortcuts import render_to_response, render_mako
 from django.utils.webhelpers import siteurl, wsgibase
-import dango.utils.webhelpers as webhelpers
+import django.utils.webhelpers as webhelpers
 from madas.login.views import processLogin
 from django.contrib.auth.models import User
 
