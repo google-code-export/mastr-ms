@@ -32,7 +32,8 @@ MA.RequestQuoteInit = function () {
 	var reqQuoCmp = Ext.getCmp('requestquote-panel');   
 
     //fetch user details
-    reqQuoCmp.load({url: MA.BaseUrl + 'user/userload', waitMsg:'Loading'});
+    if (MA.CurrentUser.IsLoggedIn)
+        reqQuoCmp.load({url: MA.BaseUrl + 'user/userload', waitMsg:'Loading'});
     console.log('Request Quote');
     //reqQuoCmp.doLayout();
     
@@ -277,6 +278,7 @@ MA.QuoteRequestListInit = function(){
                                         {name: 'lastname', mapping: 'lastname'},
                                         {name: 'officephone', mapping: 'officephone'},
                                         {name: 'completed', mapping: 'completed'},
+                                        {name: 'country', mapping: 'country'},
                                         {name: 'email', mapping: 'email'},
                                         {name: 'attachment', mapping: 'attachment'}
                                       ]),
@@ -530,6 +532,7 @@ MA.QuoteRequestEditCmp =
                                             {name: 'lastname', mapping: 'lastname'},
                                             {name: 'officephone', mapping: 'officephone'},
                                             {name: 'completed', mapping: 'completed'},
+                                            {name: 'country', mapping: 'country'},
                                             {name: 'email', mapping: 'email'},
                                             {name: 'attachment', mapping: 'attachment'}
                                           ]),
@@ -1249,7 +1252,7 @@ MA.ViewFormalCmp = {
                         success: function (form, action) {
                             if (action.result.success === true) { 
                             
-                                Ext.Msg.alert('Formal quote rejected', 'close this window when you are ready');
+                                Ext.Msg.alert('Formal quote rejected', 'The formal quote has been rejected.');
                                 
                                 //load up the menu and next content area as declared in response
                                 MA.ChangeMainContent(action.result.mainContentFunction);

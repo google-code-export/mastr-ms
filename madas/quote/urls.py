@@ -30,7 +30,7 @@ urlpatterns = patterns(
     (r'^quote/downloadPDF', 'madas.quote.views.downloadPDF', {'SSL':True}),
     (r'^quote/sendRequest', 'madas.quote.views.sendRequest', {'SSL':True}),
     #links from emails to formal quotes...
-    #(r'^quote/viewformal(\D+)(?P<qid>\d+)$', 'madas.quote.views.formalLoad'),
+    #(r'^quote/viewformal', 'madas.quote.views.formalLoad'),
     
     #(r'^quote/viewformal', 'madas.quote.views.redirectMain'),
     #login
