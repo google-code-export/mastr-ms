@@ -37,8 +37,7 @@ Ext.Ajax.on('requestexception', function(conn, response, options, e)
     }
     else if (response.status == 403)
     {
-        console.log("GLOBAL XHR error handler: Unauthorised. Resetting user.");
-        MA.ResetUser();
+        console.log("GLOBAL XHR error handler: Unauthorised.");
         MA.ChangeMainContent('notauthorized');
     }
     else

@@ -4,6 +4,8 @@ import settings
 from django.db import models
 from django.contrib.auth.ldap_helper import LDAPHandler
 
+from madas.decorators import *
+
 from madas.utils import jsonResponse, json_encode
 from madas.quote.models import Quoterequest, Formalquote, Quotehistory, Emailmap
 from django.db.models import Q
@@ -176,13 +178,11 @@ def sendRequest(request, *args):
     print '*** quote:sendRequest: exit ***'
     return jsonResponse( mainContentFunction='quote:request')       
 
+@admins_or_nodereps
 def listQuotesRequiringAttention(request):
     '''Used by dashboard to list the quotes that aren't Completed and don't have
        a formal quote yet.'''
 
-    # TODO return unauth
-    assert 'Administrators' in g or 'Node Reps' in g
-   
     qs = Quoterequest.objects.filter(completed=False,formalquote__id=None)
     import utils
     g = getCurrentUser(request).CachedGroups 
@@ -215,54 +215,37 @@ def listQuotes(request, *args):
 
     print '\tgroups was : ' + str(g)
     from madas.users import views
-    print '\tcalling'
     nodelist = views.getNodeMemberships(g)
     print '\tnode was : ' , nodelist
 
     results = [] 
-
-    try:
-        print '\tRetrieving quotes for: ', request.user.username
-        quoteslist = Quoterequest.objects.filter(emailaddressid__emailaddress=request.user.username).values('id', 'completed', 'unread', 'tonode', 'firstname', 'lastname', 'officephone', 'details', 'country', 'requesttime', 'emailaddressid__emailaddress' )
-        for ql in quoteslist:
-            ql['email'] = ql['emailaddressid__emailaddress']
-            del ql['emailaddressid__emailaddress']
-            results.append(ql)
-    except Exception, e:
-        print 'exception: ', str(e)
-
-    try:
+    quoteslist = []
+    if settings.MADAS_NODEREP_GROUP in g:
         print '\tRetrieving quotes for: ', nodelist[0]
         quoteslist = Quoterequest.objects.filter(Q(tonode=nodelist[0]) | Q()).values('id', 'completed', 'unread', 'tonode', 'firstname', 'lastname', 'officephone', 'details', 'country', 'requesttime', 'emailaddressid__emailaddress' )
-        for ql in quoteslist:
-            ql['email'] = ql['emailaddressid__emailaddress']
-            del ql['emailaddressid__emailaddress']
-            results.append(ql)
-    except Exception, e:
-        print 'exception: ', str(e)
-
-    if 'Administrators' in g:
-        print '\tchecking administrators'
-        print '\tRetrieving quotes for: Administrators' 
-        adminlist = Quoterequest.objects.filter(tonode='').values('id', 'completed', 'unread', 'tonode', 'firstname', 'country', 'lastname', 'officephone', 'details', 'requesttime', 'emailaddressid__emailaddress' )
-        print '\tadmini query finished'
-        for ql in adminlist:
-            ql['email'] = ql['emailaddressid__emailaddress']
-            del ql['emailaddressid__emailaddress']
-            results.append(ql)
-        print '\tkey renaming finished'
-
-    try:
-        from madas import utils
-        #these may not be unique. need to uniquify them.
-        resultsset = utils.uniqueList(results) 
-    except Exception, e:
-        print '\tEXCEPTION when constructing unique list:', str(e) 
-    print '\tfinished generating quoteslist' 
-
-    print '*** quote/listQuotes : exit *** '
-    return jsonResponse( items=resultsset)       
+    else: #they are just a client. Show only their own quotes
+        quoteslist = Quoterequest.objects.filter(emailaddressid__emailaddress=request.user.username).values('id', 'completed', 'unread', 'tonode', 'firstname', 'lastname', 'officephone', 'details', 'country', 'requesttime', 'emailaddressid__emailaddress' )
     
+    quoteslist = list(quoteslist) #convert to normal list
+
+    #If they are an admin, ALSO show quotes which don't yet have a node
+    if settings.MADAS_ADMIN_GROUP in g:
+        homelessquotes = Quoterequest.objects.filter(tonode='').values('id', 'completed', 'unread', 'tonode', 'firstname', 'country', 'lastname', 'officephone', 'details', 'requesttime', 'emailaddressid__emailaddress' )
+        quoteslist += list(homelessquotes)
+    
+    #transform the email field to be named correctly.
+    for ql in quoteslist:
+        ql['email'] = ql['emailaddressid__emailaddress']
+        del ql['emailaddressid__emailaddress']
+        results.append(ql)
+
+    #make the list unique. We can't use a set because the list contains unhashable types
+    resultsset = utils.uniqueList(results)
+    
+
+    return jsonResponse( items=resultsset)       
+
+@admins_or_nodereps
 def listAll(request, *args):
     '''This corresponds to Madas Dashboard->Quotes->Overview List
        Accessible by Administrators, Node Reps
@@ -899,21 +882,24 @@ def redirectMain(request, *args, **kwargs):
     print 'redirectMain is redirecting to ', siteurl(request)
     return HttpResponseRedirect(siteurl(request))
     
-def serveIndex(request, *args, **kwargs):
-    params = request.session.get('params', '')
-    print 'serve index...' 
+def serveIndex(request, cruft, *args, **kwargs):
+    #params = request.session.get('params', '')
+    print 'serve index...'
+    print 'cruft: ', cruft
+    #print 'params: ', params
     #print settings.APP_SECURE_URL
     #print request.username
     #print request.session.get('mainContentFunction', 'AAAAAAAA')
-    request.params = params
-    from django.utils import simplejson
-    m = simplejson.JSONEncoder()
-    paramstr = m.encode(params)
     
-    if params:
-        sendparams = params[1]
-    else:
-        sendparams = ''
+    #request.params = params
+    #from django.utils import simplejson
+    #m = simplejson.JSONEncoder()
+    #paramstr = m.encode(params)
+    
+    #if params:
+    #    sendparams = params[1]
+    #else:
+    #    sendparams = ''
     
     mcf = request.session.get('redirectMainContentFunction')
     if mcf is None: mcf = 'dashboard'
@@ -923,7 +909,7 @@ def serveIndex(request, *args, **kwargs):
                         username = request.user.username,
                         mainContentFunction = mcf,
                         wh = webhelpers,
-                        params = sendparams # params[1] #None #['quote:viewformal', {'qid': 83}]
+                        params = ''# sendparams # params[1] #None #['quote:viewformal', {'qid': 83}]
                       )
 def serverinfo(request):
     return render_mako('serverinfo.mako', s=settings, request=request, g=globals() )

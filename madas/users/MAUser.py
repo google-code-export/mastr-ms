@@ -1,6 +1,6 @@
 from django.utils import simplejson
 from django.contrib.auth.ldap_helper import LDAPHandler
-
+from settings import MADAS_ADMIN_GROUP, MADAS_NODEREP_GROUP, MADAS_USER_GROUP
 
 #Just a class to encapsulate data to send to the frontend (as json)
 class MAUser(object):
@@ -75,9 +75,9 @@ class MAUser(object):
             if self.CachedGroups is None:
                 self.CachedGroups = [];
             
-            if 'Administrators' in self.CachedGroups:
+            if MADAS_ADMIN_GROUP in self.CachedGroups:
                 self.IsAdmin = True
-            if 'Node Reps' in self.CachedGroups:
+            if MADAS_NODEREP_GROUP in self.CachedGroups:
                 self.IsNodeRep = True
             
             #For 'staff':
@@ -88,7 +88,7 @@ class MAUser(object):
             #!admin and !noderep and numgroups > 1
             if not self.IsAdmin and not self.IsNodeRep and len(self.CachedGroups) > 1:
                 self.IsStaff = True
-            elif len(self.CachedGroups) == 1 and 'User' in self.CachedGroups:
+            elif len(self.CachedGroups) == 1 and MADAS_USER_GROUP in self.CachedGroups:
                 self.IsClient = True
 
         #Store this user in the session
