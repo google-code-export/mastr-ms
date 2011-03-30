@@ -171,7 +171,9 @@ MA.ChangeMainContent = function(contentName, paramArray){
             break;
 
         case "project:list":
+            clientsListStore.load();
             projectsListStore.load();
+
             Ext.getCmp('center-panel').layout.setActiveItem('projects-list');
             break;
 
@@ -189,6 +191,7 @@ MA.ChangeMainContent = function(contentName, paramArray){
             break;
 
         case 'project:view':
+            expStatusComboStore.load();
             Ext.getCmp('center-panel').layout.setActiveItem('projectCmpTitle');
             Ext.getCmp('project-experiment-list').enable();
             break;
