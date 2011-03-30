@@ -192,6 +192,10 @@ MA.ChangeMainContent = function(contentName, paramArray){
 
         case 'project:view':
             expStatusComboStore.load();
+            machineStore.load();
+            sopLookupStore.load();
+            userComboStore.load();
+            involvementComboStore.load();
             Ext.getCmp('center-panel').layout.setActiveItem('projectCmpTitle');
             Ext.getCmp('project-experiment-list').enable();
             break;
