@@ -60,6 +60,7 @@ def admin_requests(request, *args):
 
     return jsonResponse(items=newlist)  
 
+@admins_or_nodereps
 def user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active User Search
        Accessible by Administrators, Node Reps
@@ -122,6 +123,7 @@ def user_search(request, *args):
 
     return jsonResponse(items=newlist) 
 
+@admins_or_nodereps
 def rejected_user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Rejected User Search
        Accessible by Administrators, Node Reps
@@ -164,6 +166,7 @@ def rejected_user_search(request, *args):
     print '***rejected_user_search : exit ***' 
     return jsonResponse(items=newlist) 
 
+@admins_or_nodereps
 def deleted_user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Deleted User Search
        Accessible by Administrators, Node Reps
@@ -202,6 +205,7 @@ def deleted_user_search(request, *args):
     print '***deleted_user_search : exit ***' 
     return jsonResponse(items=newlist) 
 
+@admins_or_nodereps
 def user_load(request, *args):
     '''This is called when an admin user opens up an individual user record
        from an admin view e.g. Active User Search
@@ -229,6 +233,7 @@ def user_load(request, *args):
     print '***admin/user_load : exit ***' 
     return jsonResponse(data=d)
 
+@admins_or_nodereps
 def user_save(request, *args):
     '''This is called when an admin user hits save on an individual user record
        from an admin view e.g. Active User Search
@@ -287,6 +292,7 @@ def user_save(request, *args):
 
     return jsonResponse(mainContentFunction=nextview) 
 
+@admins_or_nodereps
 def node_save(request, *args):
     '''This is called when saving node details in the Node Management.
        Madas Dashboard->Admin->Node Management
@@ -315,6 +321,7 @@ def node_save(request, *args):
     print '*** node_save : exit ***'
     return jsonResponse(success=returnval, mainContentFunction='admin:nodelist') 
 
+@admins_or_nodereps
 def node_delete(request, *args):
     '''This is called when saving node details in the Node Management.
        Madas Dashboard->Admin->Node Management
@@ -335,6 +342,7 @@ def node_delete(request, *args):
     print '*** node_delete : enter ***'
     return jsonResponse(mainContentFunction='admin:nodelist') 
 
+@admins_or_nodereps
 def org_save(request):
 
     args = request.REQUEST
@@ -353,6 +361,7 @@ def org_save(request):
         
     return jsonResponse()
     
+@admins_or_nodereps
 def org_delete(request):
 
     args = request.REQUEST
@@ -363,6 +372,7 @@ def org_delete(request):
 
     return jsonResponse()
 
+@admins_or_nodereps
 def list_organisations(request):
 
     if request.GET:

@@ -3,7 +3,6 @@
 import settings
 from django.db import models
 from django.contrib.auth.ldap_helper import LDAPHandler
-
 from madas.decorators import *
 
 from madas.utils import jsonResponse, json_encode
@@ -16,6 +15,8 @@ from django.utils.webhelpers import siteurl, wsgibase
 import django.utils.webhelpers as webhelpers
 from madas.login.views import processLogin 
 from madas.users.MAUser import getCurrentUser
+from madas.login.URLState import getCurrentURLState
+from django.utils import simplejson
 from string import *
 
 QUOTE_STATE_DOWNLOADED = 'downloaded'
@@ -342,7 +343,7 @@ def listFormal(request, *args, **kwargs):
     return jsonResponse( items=list(fquoteslist)) 
 
 def _loadQuoteRequest(qid):
-    print '\tload: qid was ', qid
+    print '\t_loadQuoteRequest: qid was ', qid
     if qid is not None and qid.isdigit() and qid is not '':
         qr = Quoterequest.objects.filter(id = qid).values('id', 'emailaddressid__emailaddress', 'tonode', 'details', 'requesttime', 'unread', 'completed', 'firstname', 'lastname', 'officephone', 'country', 'attachment')
         try:
@@ -360,7 +361,7 @@ def _loadQuoteRequest(qid):
     
     return qr
     
-
+@authentication_required
 def load(request, *args):
     '''load quote details'''
     print '*** load : enter ***'
@@ -565,7 +566,16 @@ def formalLoad(request, *args, **kwargs):
     #setRequestVars(request, success=True, data=retvals, totalRows=1, params=[], authenticated=True, authorized=True) 
     print '***formalLoad : exit ***'
     return jsonResponse(data=retvals) 
-              
+   
+   
+def viewFormalRedirect(request, *args):
+    print 'Entered viewFormalRedirect'
+    urlstate = getCurrentURLState(request)
+    urlstate.redirectMainContentFunction = 'quote:viewformal'
+    urlstate.params = ['quote:viewformal', {'qid':int(request.REQUEST.get('quoterequestid', 0))}]
+
+    return HttpResponseRedirect(siteurl(request)) 
+
 def addFormalQuote(fromemail, toemail, quoterequestid, details):
     '''adds a formal quote to the database'''
     print '*** addFormalQuote : enter ***'
@@ -787,11 +797,6 @@ def formalReject(request, *args):
 
 
 
-def viewFormal(request, *args):
-    '''this would be viewing the quote from an email link. Currently this url /quote/viewformal is passed to loadquote().'''
-    pass
-
-
 def downloadPDF(request, *args):
     print '*** downloadPDF: Enter ***'
     quoterequestid = request.REQUEST.get('quoterequestid', None)
@@ -866,7 +871,9 @@ def redirectMain(request, *args, **kwargs):
     #If we have 'params' in the kwargs, we want to store them in the session.
     #We will want to retrieve them on the other side of the redirect, which
     #will probably be the login function.
-   
+  
+    print 'REDIRECT MAIN'
+
     if kwargs.has_key('module'):
         red_str = kwargs['module']
         if kwargs.has_key('submodule'):
@@ -884,32 +891,44 @@ def redirectMain(request, *args, **kwargs):
     
 def serveIndex(request, cruft, *args, **kwargs):
     #params = request.session.get('params', '')
-    print 'serve index...'
-    print 'cruft: ', cruft
-    #print 'params: ', params
-    #print settings.APP_SECURE_URL
-    #print request.username
-    #print request.session.get('mainContentFunction', 'AAAAAAAA')
+    #print 'serve index...'
+    #print 'cruft: ', cruft
+    #print 'siteurl: ', siteurl(request)
+    #print 'session: '
+    #for key in request.session.keys():
+    #    print '\t%s: %s' % (key, str(request.session[key]))
+
+    currentuser = getCurrentUser(request)
+    mcf = 'dashboard'
+    params = ''
+    if currentuser.IsLoggedIn:
+        #only clear if we were logged in.
+        urlstate = getCurrentURLState(request, andClear=True)
+    else:
+        urlstate = getCurrentURLState(request) 
     
-    #request.params = params
-    #from django.utils import simplejson
-    #m = simplejson.JSONEncoder()
-    #paramstr = m.encode(params)
-    
-    #if params:
-    #    sendparams = params[1]
-    #else:
-    #    sendparams = ''
-    
-    mcf = request.session.get('redirectMainContentFunction')
-    if mcf is None: mcf = 'dashboard'
-    request.session['redirectMainContentFunction'] = None
+    if urlstate.redirectMainContentFunction:
+            mcf = urlstate.redirectMainContentFunction
+    if urlstate.params:
+        params = urlstate.params
+    print 'params: ', params
+
+    if params:
+        sendparams = params[1]
+    else:
+        sendparams = ''
+
+    from django.utils import simplejson
+    jsonparams = simplejson.dumps(sendparams)
+    #print 'calling render with mcf=', mcf
+    #print 'calling render with params=', params
+
     return render_mako('index.mako', 
-                        APP_SECURE_URL = siteurl(request),#settings.APP_SECURE_URL,
+                        APP_SECURE_URL = siteurl(request),
                         username = request.user.username,
                         mainContentFunction = mcf,
                         wh = webhelpers,
-                        params = ''# sendparams # params[1] #None #['quote:viewformal', {'qid': 83}]
+                        params = jsonparams 
                       )
 def serverinfo(request):
     return render_mako('serverinfo.mako', s=settings, request=request, g=globals() )

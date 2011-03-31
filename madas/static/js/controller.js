@@ -29,7 +29,7 @@ MA.ChangeMainContent = function(contentName, paramArray){
     var showMenu = true;
     var affectMenu = true;
     var cancelBackTarget = true; //whether or not this action should be invoked if a user clicks Cancel (where the variable is obeyed)
-
+    console.log('MA.ChangeMainContent was called with content: ' + contentName);
     Ext.QuickTips.init();
     
     switch (contentName) {
@@ -38,7 +38,6 @@ MA.ChangeMainContent = function(contentName, paramArray){
             if (paramArray) {
                 resultContent = paramArray[0];
                 params = paramArray[1];
-                //MA.Authorize(resultContent, params);
                 break;
             }
             //default
@@ -291,7 +290,6 @@ MA.ChangeMainContent = function(contentName, paramArray){
  * initializes the main application interface and any required variables
  */
 MA.InitApplication = function(appSecureUrl, username, mainContentFunction, params) {
-   console.log("InitApplication was run");
    //various global settings for Ext
    Ext.BLANK_IMAGE_URL = appSecureUrl + 'static/ext-3.3.0/resources/images/default/s.gif';
    Ext.QuickTips.init();
@@ -345,7 +343,8 @@ MA.InitApplication = function(appSecureUrl, username, mainContentFunction, param
     
     var paramArray;
     if (params) {
-        paramArray = params; //eval is evil
+        paramArray = JSON.parse(params); //eval is evil
+        console.log('In InitApplication, params is: ' + params)
     }
 
     MA.ExperimentController.mask = new Ext.LoadMask("center-panel", {

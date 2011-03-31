@@ -28,7 +28,6 @@
 <!--
 <script src="${wh.url('/static/ext-3.3.0/adapter/ext/ext-base.js')}" type="text/javascript"></script>
 -->
-
 <script type="text/javascript" src="${wh.url('/static/js/repo/prototype.js')}"></script>
 <script type="text/javascript" src="${wh.url('/static/js/repo/scriptaculous/scriptaculous.js')}"></script>
 <script src="${wh.url('/static/ext-3.3.0/adapter/prototype/ext-prototype-adapter.js')}" type="text/javascript"></script>
@@ -48,6 +47,7 @@ MA.BaseUrl = '${ APP_SECURE_URL }';
 <!-- Madas scripts -->
 <script type="text/javascript" src="${wh.url('/static/js/utils.js')}"></script>
 
+<script type="text/javascript" src="${wh.url('/static/js/json2.js')}"></script>
 <script type="text/javascript" src="${wh.url('/static/js/repo/datastores.js')}"></script>
 <script type="text/javascript" src="${wh.url('/static/js/repo/renderers.js')}"></script>
 <script type="text/javascript" src="${wh.url('/static/js/repo/GridSearch.js')}"></script>
@@ -94,7 +94,7 @@ function callbacker(){
         return;
     }
     
-    MA.InitApplication('${ APP_SECURE_URL }', '${ username }', '${ mainContentFunction }', "${ params }");
+    MA.InitApplication('${ APP_SECURE_URL }', '${ username }', '${ mainContentFunction }', '${ params }');
     document.getElementById("appLoad").style.display = "none";
     //document.getElementById('loginDiv').style.display = 'none';
 }

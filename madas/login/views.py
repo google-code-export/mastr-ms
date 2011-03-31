@@ -6,6 +6,7 @@ from madas.utils import jsonResponse
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.utils import simplejson
 from users.MAUser import MAUser
+from madas.login.URLState import getCurrentURLState
 
 def processLogin(request, *args):
     print '***processLogin : enter ***' 
@@ -13,8 +14,9 @@ def processLogin(request, *args):
     #firstly, check the session for params.
     params = request.session.get('params', [])
     redirectMainContentFunction = request.session.get('redirectMainContentFunction', None)
-    print '\tredirectMainContentFunction is %s' % (redirectMainContentFunction)
-    print '\tparams is %s' % (params)
+            
+    #print '\tredirectMainContentFunction is %s' % (redirectMainContentFunction)
+    #print '\tparams is %s' % (params)
 
     success = False
 
@@ -58,7 +60,7 @@ def processLogin(request, *args):
                 #set the session to expire after
                 from madas import settings
                 request.session.set_expiry(settings.MADAS_SESSION_TIMEOUT)
-                request.session['loggedin'] = True
+                #request.session['loggedin'] = True
             else:
                 print '\tprocessLogin: inactive user'
                 success = False
@@ -96,10 +98,12 @@ def processLogin(request, *args):
             request.user.save() #save the status of is_admin 
         
         u = request.user
+        
         if redirectMainContentFunction is not None and redirectMainContentFunction != '': 
+            print 'Redirectmaincontentfunction was: ', redirectMainContentFunction
             nextview = redirectMainContentFunction
-        #    request.session['redirectMainContentFunction'] = None
-        #    request.session['params'] = None
+            request.session['redirectMainContentFunction'] = None
+            request.session['params'] = None
                
         mainContentFunction = nextview
         params = params
@@ -170,23 +174,30 @@ def forgotPasswordRedirect(request, *args):
     u = request.user
     try:
         print '\tsetting vars'
-        request.session['redirectMainContentFunction'] = 'login:resetpassword'
-        request.session['resetPasswordEmail'] = request.REQUEST['em']
-        request.session['resetPasswordValidationKey'] = request.REQUEST['vk']
-        from django.http import HttpResponseRedirect
+        #request.session['redirectMainContentFunction'] = 'login:resetpassword'
+        #request.session['resetPasswordEmail'] = request.REQUEST['em']
+        #request.session['resetPasswordValidationKey'] = request.REQUEST['vk']
+        urlstate = getCurrentURLState(request)
+        print 'setting mcf'
+        urlstate.redirectMainContentFunction = 'login:resetpassword'
+        print 'setting em'
+        urlstate.resetPasswordEmail = request.REQUEST['em']
+        print 'setting vk'
+        urlstate.resetPasswordValidationKey = request.REQUEST['vk']
         
+        print 'redirecting' 
         return HttpResponseRedirect(siteurl(request))
     except Exception, e:
+        print 'there was an exception in forgot password'
         print str(e)
 
 def populateResetPasswordForm(request, *args):
     u = request.user
     print '***populateResetPasswordForm***: enter'
     data = {}
-    data['email'] = request.session['resetPasswordEmail']
-    data['validationKey'] = request.session['resetPasswordValidationKey']
-    print '\tData: ', data
-
+    urlstate = getCurrentURLState(request, andClear=True)
+    data['email'] = urlstate.resetPasswordEmail
+    data['validationKey'] = urlstate.resetPasswordValidationKey
     print '***populateResetPasswordForm***: exit'
     return jsonResponse(items=[data]) 
 

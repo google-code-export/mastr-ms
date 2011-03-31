@@ -34,8 +34,7 @@ MA.RequestQuoteInit = function () {
     //fetch user details
     if (MA.CurrentUser.IsLoggedIn)
         reqQuoCmp.load({url: MA.BaseUrl + 'user/userload', waitMsg:'Loading'});
-    console.log('Request Quote');
-    //reqQuoCmp.doLayout();
+    reqQuoCmp.doLayout();
     
     return;
 };
@@ -131,13 +130,15 @@ MA.RequestQuoteCmp =
                     allowBlank:false,
                     grow:true,
                     growMax:360
-                },{
+                }
+                ,{
                         xtype: 'fileuploadfield',
                         id: 'quo-attach',
-                        emptyText: '',
-                        fieldLabel: 'Attach a File (optional)',
-                        name: 'attachfile'
-                } 
+                        emptyText: 'Attach a file',
+                        fieldLabel: 'File',
+                        name: 'attachfile',
+                        buttonText: '...',
+                }
             ],
             buttons: [
                  {
@@ -686,13 +687,17 @@ MA.QuoteRequestEditCmp =
                  id: 'cancelEditQuoteRequestBtn',
                  hidden : true,
                  handler: function(){
-                    Ext.getCmp('quoterequestedit-panel').getForm().reset();
+                    quoteReqEditCmp = Ext.getCmp('quoterequestedit-panel');
+                    quoteReqEditCmp.getForm().reset();
+                    
+                    //trying to reload the data into the form
+                    //quoteReqEditCmp.load({url: MA.BaseUrl + 'quote/load', params: {'qid': quoteReqEditCmp.getForm().findField("id").getValue()}});
                     MA.QuoteEditVisualToggle(false);
                     }
                  },
                  {
                  text: 'Save',
-                 id:'requestQuoteSubmit',
+                 id:'editQuoteSubmit',
                  handler: function(){
                     Ext.getCmp('quoterequestedit-panel').getForm().submit(
                         {   successProperty: 'success',
@@ -1056,7 +1061,10 @@ MA.FquoValidatePassword = function (textfield, event) {
 };
 
 MA.ViewFormalInit = function(paramArray){
+    console.log(paramArray);
     var id = paramArray.qid;
+    console.log('the id is now: ' + id);
+
     var quoteRequestEditCmp = Ext.getCmp('fquouserdetails-panel');
     var formalQuoteCmp = Ext.getCmp('formalquoteview-panel');
 
