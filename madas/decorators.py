@@ -28,4 +28,5 @@ def admins_only(f):
 
 def admins_or_nodereps(f):
     return restricted_view(f, lambda u: u.IsAdmin or u.IsNodeRep)
-
+def authentication_required(f):
+    return restricted_view(f, lambda u: u.IsLoggedIn)

@@ -32,7 +32,7 @@ urlpatterns = patterns(
     #links from emails to formal quotes...
     #(r'^quote/viewformal', 'madas.quote.views.formalLoad'),
     
-    #(r'^quote/viewformal', 'madas.quote.views.redirectMain'),
+    (r'^quote/viewformal', 'madas.quote.views.viewFormalRedirect'),
     #login
     (r'^login/processLogin', 'madas.quote.views.login', {'SSL':True}),
     (r'^login/processLogout', 'madas.login.views.processLogout', {'SSL':True}),

@@ -341,7 +341,9 @@ MA.AdminUserEditInit = function (paramArray) {
     Ext.getCmp("adminUserEditConfirmPassword").on('blur', MA.AdminUserEditValidatePassword);
     
     Ext.getCmp('adminUserEditSubmit').enable();
-    
+    //Load the organisation store
+    Ext.getCmp('adminUserEditOrganisation').store.load();
+
     //if user is not an admin, disable certain UI components in the form
     if (!MA.CurrentUser.IsAdmin) {
         Ext.getCmp('adminUserEditIsAdmin').disable();
