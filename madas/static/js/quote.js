@@ -119,7 +119,7 @@ MA.RequestQuoteCmp =
                     listWidth:230,
                     store: new Ext.data.JsonStore({
                         storeId:'sendToStore',
-                        url: MA.BaseUrl + 'quote/listGroups',
+                        url: MA.BaseUrl + 'user/listAllNodes',
                         root: 'response.value.items',
                         fields: ['name', 'submitValue']
                     })
@@ -611,7 +611,7 @@ MA.QuoteRequestEditCmp =
                     disabled: true,
                     store: new Ext.data.JsonStore({
                         storeId: 'redirectQuoteNodeDS',
-                        url: MA.BaseUrl + 'quote/listGroups',
+                        url: MA.BaseUrl + 'user/listAllNodes',
                         root: 'response.value.items',
                         fields: ['name', 'submitValue']
                     })

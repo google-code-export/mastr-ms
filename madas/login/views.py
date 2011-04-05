@@ -2,21 +2,19 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils.webhelpers import siteurl
 
-from madas.utils import jsonResponse
+from madas.utils.data_utils import jsonResponse
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.utils import simplejson
 from users.MAUser import MAUser
 from madas.login.URLState import getCurrentURLState
 
+def login(request, *args):
+    success = processLogin(request, args)
+    return HttpResponseRedirect(siteurl(request)) 
+
+
 def processLogin(request, *args):
     print '***processLogin : enter ***' 
-
-    #firstly, check the session for params.
-    params = request.session.get('params', [])
-    redirectMainContentFunction = request.session.get('redirectMainContentFunction', None)
-            
-    #print '\tredirectMainContentFunction is %s' % (redirectMainContentFunction)
-    #print '\tparams is %s' % (params)
 
     success = False
 
@@ -55,12 +53,9 @@ def processLogin(request, *args):
                 success = True
                 authenticated = True
                 authorized = True
-                #flush the session
-                #request.session.flush()
                 #set the session to expire after
                 from madas import settings
                 request.session.set_expiry(settings.MADAS_SESSION_TIMEOUT)
-                #request.session['loggedin'] = True
             else:
                 print '\tprocessLogin: inactive user'
                 success = False
@@ -99,11 +94,13 @@ def processLogin(request, *args):
         
         u = request.user
         
-        if redirectMainContentFunction is not None and redirectMainContentFunction != '': 
-            print 'Redirectmaincontentfunction was: ', redirectMainContentFunction
-            nextview = redirectMainContentFunction
-            request.session['redirectMainContentFunction'] = None
-            request.session['params'] = None
+        params = []
+        #redirectMainContentFunction = None 
+        #if redirectMainContentFunction is not None and redirectMainContentFunction != '': 
+        #    print 'Redirectmaincontentfunction was: ', redirectMainContentFunction
+        #    nextview = redirectMainContentFunction
+        #    request.session['redirectMainContentFunction'] = None
+        #    request.session['params'] = None
                
         mainContentFunction = nextview
         params = params

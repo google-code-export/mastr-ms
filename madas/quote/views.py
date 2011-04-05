@@ -3,74 +3,26 @@
 import settings
 from django.db import models
 from django.contrib.auth.ldap_helper import LDAPHandler
-from madas.decorators import *
-
-from madas.utils import jsonResponse, json_encode
-from madas.quote.models import Quoterequest, Formalquote, Quotehistory, Emailmap
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, render_mako
 from django.utils.webhelpers import siteurl, wsgibase
 import django.utils.webhelpers as webhelpers
-from madas.login.views import processLogin 
+
+from madas.decorators import *
+from madas.utils.data_utils import jsonResponse, json_encode, uniqueList
+from madas.quote.models import Quoterequest, Formalquote, Quotehistory, Emailmap
 from madas.users.MAUser import getCurrentUser
 from madas.login.URLState import getCurrentURLState
 from django.utils import simplejson
-from string import *
+#from string import *
 
 QUOTE_STATE_DOWNLOADED = 'downloaded'
 QUOTE_STATE_NEW = 'new' #is the default on the DB column
 QUOTE_STATE_ACCEPTED = 'accepted'
 QUOTE_STATE_REJECTED = 'rejected'
 from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-
-
-def listGroups(request, *args):
-    #debug function    
-    ld = LDAPHandler()
-    r = ld.ldap_list_groups()
-    print 'listGroups: the groups were: ', r
-    groups = []
-    if not request.REQUEST.has_key('ignoreNone'):    
-        d = {'name':'Don\'t Know', 'submitValue':''}
-        groups.append(d)
-
-    for groupname in r:
-
-        #Cull out the admin groups and the status groups
-        if groupname not in MADAS_STATUS_GROUPS and groupname not in MADAS_ADMIN_GROUPS:
-            d = {'name':groupname, 'submitValue':groupname}
-            groups.append(d)       
-    
-         
-    return jsonResponse(items=groups)
-    
-
-def listRestrictedGroups(request, *args):
-    print '*** list Restricted Groups : enter ***'
-    g = getCurrentUser(request).CachedGroups
-    if 'Administrators' in g:
-        retval = listGroups(request)
-    else:
-        from madas.users.views import getNodeMemberships
-        n = getNodeMemberships(g)
-        print 'NodeMemberships: ', n
-        groups = []
-        
-        for groupname in n:
-
-            #Cull out the admin groups and the status groups
-            if groupname not in MADAS_STATUS_GROUPS and groupname not in MADAS_ADMIN_GROUPS:
-                d = {'name':groupname, 'submitValue':groupname}
-                groups.append(d) 
-            
-            groups.append({'name':'Don\'t Know', 'submitValue':''})
-        
-        retval = jsonResponse(items=groups)
-    print '*** list Restricted Groups : exit ***'
-    return retval 
-
 
 def _handle_uploaded_file(f, name):
     '''Handles a file upload to the projects QUOTE_FILES_ROOT
@@ -116,8 +68,6 @@ def _findAdminOrNodeRepEmailTarget(groupname = 'Administrators'): #TODO use MADA
     print 'returning all records: ', retval
     print '*** _findAdminOrNodeRepEmailTarget : exit ***'
     return retval 
-
-
 
 def sendRequest(request, *args):
     print '***quote: sendRequest***'
@@ -185,7 +135,6 @@ def listQuotesRequiringAttention(request):
        a formal quote yet.'''
 
     qs = Quoterequest.objects.filter(completed=False,formalquote__id=None)
-    import utils
     g = getCurrentUser(request).CachedGroups 
     if 'Node Reps' in g and 'Administrators' not in g:
         from madas.users import views
@@ -211,7 +160,6 @@ def listQuotes(request, *args):
        Accessible by Administrators, Node Reps and Clients but it filters down to just Client's quote requests if it is a Client
     '''
     #TODO: Find out which nodes this user represents, or if they are an administrator
-    import utils
     g = getCurrentUser(request).CachedGroups
 
     print '\tgroups was : ' + str(g)
@@ -241,7 +189,7 @@ def listQuotes(request, *args):
         results.append(ql)
 
     #make the list unique. We can't use a set because the list contains unhashable types
-    resultsset = utils.uniqueList(results)
+    resultsset = uniqueList(results)
     
 
     return jsonResponse( items=resultsset)       
@@ -297,8 +245,7 @@ def listAll(request, *args):
         print '\tkey renaming finished'
 
     try:
-        from madas import utils
-        resultsset = utils.uniqueList(results) #these may not be unique. need to uniquify them.
+        resultsset = uniqueList(results) #these may not be unique. need to uniquify them.
     except Exception, e:
         print '\tException making results set unique', str(e) 
     print '\tfinished generating quoteslist' 
@@ -858,39 +805,8 @@ def downloadAttachment(request, *args):
 
 
 
-def check_default(request):
-    return True
-
-def login(request, *args):
-    success = processLogin(request, args)
-    return HttpResponseRedirect(siteurl(request)) 
-
-from django.template import Context, loader
-
-def redirectMain(request, *args, **kwargs):
-    #If we have 'params' in the kwargs, we want to store them in the session.
-    #We will want to retrieve them on the other side of the redirect, which
-    #will probably be the login function.
-  
-    print 'REDIRECT MAIN'
-
-    if kwargs.has_key('module'):
-        red_str = kwargs['module']
-        if kwargs.has_key('submodule'):
-            red_str += ':%s' % (kwargs['submodule'])
-
-        print 'Setting session[redirectMainContentFunction] to %s' % (red_str)
-        request.session['redirectMainContentFunction'] = red_str 
-    
-    if kwargs.has_key('params'):
-        request.session['params'] = kwargs['params']    
-        request.session['params'].insert(0, red_str)
-
-    print 'redirectMain is redirecting to ', siteurl(request)
-    return HttpResponseRedirect(siteurl(request))
     
 def serveIndex(request, cruft, *args, **kwargs):
-    #params = request.session.get('params', '')
     #print 'serve index...'
     #print 'cruft: ', cruft
     #print 'siteurl: ', siteurl(request)
