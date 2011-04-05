@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseNotFound
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.contrib.auth.models import User
 
-from madas.utils import jsonResponse, json_encode, translate_dict
+from madas.utils.data_utils import jsonResponse, json_encode, translate_dict
 from madas.quote.models import Quoterequest, Formalquote, Organisation, UserOrganisation
 from django.db.models import Q
 from madas.repository.json_util import makeJsonFriendly

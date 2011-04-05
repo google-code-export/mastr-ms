@@ -1,11 +1,12 @@
 # Create your views here.
 from django.contrib.auth.ldap_helper import LDAPHandler
-from madas.utils import jsonResponse, translate_dict, makeJsonFriendly
+from madas.utils.data_utils import jsonResponse, translate_dict, makeJsonFriendly
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
 from MAUser import MAUser, getCurrentUser
+from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
 
 ##The user info view, which sends the state of the logged in
 ##user to the frontend.
@@ -13,6 +14,58 @@ def userinfo(request):
     m = MAUser()
     m.refresh(request)
     return HttpResponse(m.toJson())
+
+
+def listAllNodes(request, *args):
+    '''
+    This view lists all nodes in the system
+    These are the groups left over when the
+    status and administrative groups are removed
+    
+    The format for the return is a list of dicts,
+    each entry having a 'name' and a 'submitvalue'
+
+    Note: this is for use in a dropdown which expects
+    an additional option "Don't Know" which has the value ''. 
+    If request.REQUEST has 'ignoreNone', we do not do this.
+    "" 
+    '''
+    ldaphandler = LDAPHandler()
+    ldapgroups = ldaphandler.ldap_list_groups()
+    groups = []
+    if not request.REQUEST.has_key('ignoreNone'):
+        groups.append({'name':'Don\'t Know', 'submitValue':''})
+
+    for groupname in ldapgroups:
+        #Cull out the admin groups and the status groups
+        if groupname not in MADAS_STATUS_GROUPS and groupname not in MADAS_ADMIN_GROUPS:
+            groups.append({'name':groupname, 'submitValue':groupname})
+    return jsonResponse(items=groups)
+
+#def listRestrictedGroups(request, *args):
+#    print '*** list Restricted Groups : enter ***'
+#    g = getCurrentUser(request).CachedGroups
+#    if 'Administrators' in g:
+#        retval = listAllNodes(request)
+#    else:
+#        from madas.users.views import getNodeMemberships
+#        n = getNodeMemberships(g)
+#        print 'NodeMemberships: ', n
+#        groups = []
+#        
+#        for groupname in n:
+#
+#            #Cull out the admin groups and the status groups
+#            if groupname not in MADAS_STATUS_GROUPS and groupname not in MADAS_ADMIN_GROUPS:
+#                d = {'name':groupname, 'submitValue':groupname}
+#                groups.append(d) 
+#            
+#            groups.append({'name':'Don\'t Know', 'submitValue':''})
+#        
+#        retval = jsonResponse(items=groups)
+#    print '*** list Restricted Groups : exit ***'
+#    return retval 
+
 
 
 def _translate_madas_to_ldap(mdict):

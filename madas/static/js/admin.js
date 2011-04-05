@@ -517,7 +517,7 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
                                         listWidth:230,
                                         store: new Ext.data.JsonStore({
                                                                       storeId: 'adminUserEditNodeDS',
-                                                                      url: MA.BaseUrl + 'admin/listGroups',
+                                                                      url: MA.BaseUrl + 'user/listAllNodes',
                                                                       root: 'response.value.items',
                                                                       fields: ['name', 'submitValue']
                                                                       })
@@ -795,7 +795,7 @@ items: [
                 { id: 'minus', qtip: 'Delete currently selected node', handler: MA.NodeManagementDeleteTool }
                 ],
         store: new Ext.data.JsonStore({
-                                      url: MA.BaseUrl + 'admin/listGroups',
+                                      url: MA.BaseUrl + 'user/listAllNodes',
                                       baseParams: { 'ignoreNone' : 'on' },
                                       root: 'response.value.items',
                                       fields: ['name', 'submitValue']

@@ -1,4 +1,4 @@
-from madas.utils import jsonResponse
+from madas.utils.data_utils import jsonResponse
 
 
 def submit(request, *args):
