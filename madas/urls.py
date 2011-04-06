@@ -11,13 +11,10 @@ from madas.quote import admin as madasadmin
 urlpatterns = patterns('',
 
     (r'^userinfo', 'madas.users.views.userinfo'),
-    #(r'^(.*)/authorize', 'madas.quote.views.authorize'),
-#    (r'^(.*)/index', 'madas.madas.views.serveIndex'),
     (r'^status/', status_view),
     (r'^sync/', include('madas.mdatasync_server.urls')),
 
     # madasrepo
-    (r'^repo/', include('madas.repository.urls')),
     (r'^ws/', include('madas.repository.wsurls')),
 
     # repoadmin
