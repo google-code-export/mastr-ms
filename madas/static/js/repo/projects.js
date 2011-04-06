@@ -616,7 +616,7 @@ MA.ProjectList = Ext.extend(Ext.Panel, {
                                     {
                                         text: "New Project",
                                         cls: "x-btn-text-icon",
-                                        icon: "static/repo/images/add.png",
+                                        icon: "static/images/add.png",
                                         handler: function (b, e) {
                                             if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep) {
                                                 MA.MenuHandler({ "id": "project:new" });
@@ -628,7 +628,7 @@ MA.ProjectList = Ext.extend(Ext.Panel, {
                                     {
                                         text: "Remove Project",
                                         cls: "x-btn-text-icon",
-                                        icon: "static/repo/images/delete.png",
+                                        icon: "static/images/delete.png",
                                         handler: function (b, e) {
                                             if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep) {
                                                 var grid = self.getComponent("grid");
@@ -809,7 +809,7 @@ MA.ProjectCmp = {
                         {
                             text: 'Add',
                             cls: 'x-btn-text-icon',
-                            icon:'static/repo/images/add.png',
+                            icon:'static/images/add.png',
                             id:'projManagersAddButton',
                             handler : function(){
                                 //POP UP A WINDOW TO ASK WHICH USER TO ADD
@@ -879,7 +879,7 @@ MA.ProjectCmp = {
                         {
                             text: 'Remove',
                             cls: 'x-btn-text-icon',
-                            icon:'static/repo/images/delete.png',
+                            icon:'static/images/delete.png',
                             id:'projManagersRemoveButton',
                             handler : function(){
                                    //remove currently selected users
@@ -932,7 +932,7 @@ MA.ProjectCmp = {
             tbar: [{
                 text: 'New Experiment',
                 cls: 'x-btn-text-icon',
-                icon:'static/repo/images/add.png',
+                icon:'static/images/add.png',
                 handler : function(){
                         MA.MenuHandler({'id':'experiment:new'});
                     }
@@ -940,7 +940,7 @@ MA.ProjectCmp = {
                 {
                 text: 'Remove Experiment',
                 cls: 'x-btn-text-icon',
-                icon:'static/repo/images/delete.png',
+                icon:'static/images/delete.png',
                 handler : function(){
                    var grid = Ext.getCmp('project-experiments');
                    var delIds = []; 
