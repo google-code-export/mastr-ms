@@ -6,9 +6,7 @@ from django.contrib.auth.ldap_helper import LDAPHandler
 from django.db.models import Q
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.urlresolvers import reverse
-from django.shortcuts import render_to_response, render_mako
 from django.utils.webhelpers import siteurl, wsgibase
-import django.utils.webhelpers as webhelpers
 
 from madas.decorators import *
 from madas.utils.data_utils import jsonResponse, json_encode, uniqueList
@@ -17,6 +15,7 @@ from madas.users.MAUser import getCurrentUser
 from madas.login.URLState import getCurrentURLState
 from django.utils import simplejson
 #from string import *
+from madas.utils.mail_functions import sendQuoteRequestConfirmationEmail, sendQuoteRequestToAdminEmail, sendFormalQuoteEmail, sendFormalStatusEmail
 
 QUOTE_STATE_DOWNLOADED = 'downloaded'
 QUOTE_STATE_NEW = 'new' #is the default on the DB column
@@ -57,7 +56,6 @@ def _findAdminOrNodeRepEmailTarget(groupname = 'Administrators'): #TODO use MADA
     grouplist.append(groupname)
     if groupname is not 'Administrators':
         grouplist.append('Node Reps')
-    
     ld = LDAPHandler()
     users = ld.ldap_list_users(grouplist)
     print '\t Users found: ', users
@@ -110,7 +108,6 @@ def sendRequest(request, *args):
     try: 
         from django.core.mail import send_mail
         #: to client
-        from madas.mail_functions import sendQuoteRequestConfirmationEmail
         sendQuoteRequestConfirmationEmail(request, qr.id, email) 
         
         #email the administrator(s) for the node 
@@ -120,7 +117,6 @@ def sendRequest(request, *args):
         else:
             searchgroups = toNode
         targetUsers = _findAdminOrNodeRepEmailTarget(groupname = searchgroups)
-        from madas.mail_functions import sendQuoteRequestToAdminEmail
         for targetUser in targetUsers:
             sendQuoteRequestToAdminEmail(request, qr.id, firstname, lastname, targetUser['uid'][0]) #toemail should be a string, but ldap returns are all lists
     except Exception, e:
@@ -428,7 +424,6 @@ def save(request, *args):
             #email the administrators for the node
             for targetuser in targetusers:
                 targetemail = targetuser['uid'][0]
-                from mail_functions import sendQuoteRequestToAdminEmail
                 sendQuoteRequestToAdminEmail(request, id, email, '', targetemail) 
     except Exception, e:
         print 'Exception emailing change to quote request: ', str(e) 
@@ -616,7 +611,6 @@ def formalSave(request, *args):
     from django.core.mail import send_mail
     toemail = qr['emailaddressid__emailaddress']
     fromemail = email
-    from madas.mail_functions import sendFormalQuoteEmail
     #get the list of admins or nodereps which should be notified:
     #note this is completely unsafe if the sequense above caused an exception retrieving the quote details.
     tonode = qr['tonode']
@@ -698,7 +692,6 @@ def formalAccept(request, *args):
     #email the node rep
         targetusers = _findAdminOrNodeRepEmailTarget(groupname = qr.tonode)
         from django.core.mail import send_mail
-        from madas.mail_functions import sendFormalStatusEmail
         for targetuser in targetusers:
             toemail = targetuser['uid'][0]
             sendFormalStatusEmail(request, qid, 'accepted', toemail, fromemail = qrvalues['email'])
@@ -732,7 +725,6 @@ def formalReject(request, *args):
             #email the node rep
             targetusers = _findAdminOrNodeRepEmailTarget(groupname = qr.tonode)
             from django.core.mail import send_mail
-            from madas.mail_functions import sendFormalStatusEmail
             for targetuser in targetusers:
                 toemail = targetuser['uid'][0]
                 sendFormalStatusEmail(request, qid, 'rejected', toemail, fromemail = qrvalues['emailaddressid__emailaddress'])
@@ -802,50 +794,4 @@ def downloadAttachment(request, *args):
     response['Content-Disposition'] = content_disposition
     response['Content-Length'] = os.path.getsize(filename)
     return response 
-
-
-
-    
-def serveIndex(request, cruft, *args, **kwargs):
-    #print 'serve index...'
-    #print 'cruft: ', cruft
-    #print 'siteurl: ', siteurl(request)
-    #print 'session: '
-    #for key in request.session.keys():
-    #    print '\t%s: %s' % (key, str(request.session[key]))
-
-    currentuser = getCurrentUser(request)
-    mcf = 'dashboard'
-    params = ''
-    if currentuser.IsLoggedIn:
-        #only clear if we were logged in.
-        urlstate = getCurrentURLState(request, andClear=True)
-    else:
-        urlstate = getCurrentURLState(request) 
-    
-    if urlstate.redirectMainContentFunction:
-            mcf = urlstate.redirectMainContentFunction
-    if urlstate.params:
-        params = urlstate.params
-    print 'params: ', params
-
-    if params:
-        sendparams = params[1]
-    else:
-        sendparams = ''
-
-    from django.utils import simplejson
-    jsonparams = simplejson.dumps(sendparams)
-    #print 'calling render with mcf=', mcf
-    #print 'calling render with params=', params
-
-    return render_mako('index.mako', 
-                        APP_SECURE_URL = siteurl(request),
-                        username = request.user.username,
-                        mainContentFunction = mcf,
-                        wh = webhelpers,
-                        params = jsonparams 
-                      )
-def serverinfo(request):
-    return render_mako('serverinfo.mako', s=settings, request=request, g=globals() )
 
