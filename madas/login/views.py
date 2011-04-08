@@ -1,12 +1,16 @@
 # Create your views here.
 from django.http import HttpResponse, HttpResponseRedirect
-from django.utils.webhelpers import siteurl
+import django.utils.webhelpers
+from django.utils.webhelpers import siteurl, wsgibase
 
 from madas.utils.data_utils import jsonResponse
+from django.shortcuts import render_to_response, render_mako
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.utils import simplejson
 from users.MAUser import MAUser
+from madas.users.MAUser import getCurrentUser
 from madas.login.URLState import getCurrentURLState
+from django.utils import simplejson
 
 def login(request, *args):
     success = processLogin(request, args)
@@ -109,10 +113,6 @@ def processLogin(request, *args):
 
     print '*** processLogin : exit ***'
     return success 
-
-### TODO: not sure this function is even needed
-def index(request, *args):
-    return jsonResponse() 
 
 def processLogout(request, *args):
     from django.contrib.auth import logout
@@ -243,4 +243,49 @@ def unauthorized(request, *args):
     mainContentFunction = 'notauthorized'
     #TODO now go to 'pager' with action 'index'
     return jsonResponse(mainContentFunction=mainContentFunction) 
+
+### TODO: not sure this function is even needed
+def index(request, *args):
+    return jsonResponse() 
+
+def serveIndex(request, *args, **kwargs):
+    #print 'serve index...'
+    #print 'cruft: ', cruft
+    #print 'siteurl: ', siteurl(request)
+    #print 'session: '
+    #for key in request.session.keys():
+    #    print '\t%s: %s' % (key, str(request.session[key]))
+
+    currentuser = getCurrentUser(request)
+    mcf = 'dashboard'
+    params = ''
+    if currentuser.IsLoggedIn:
+        #only clear if we were logged in.
+        urlstate = getCurrentURLState(request, andClear=True)
+    else:
+        urlstate = getCurrentURLState(request) 
+    
+    if urlstate.redirectMainContentFunction:
+            mcf = urlstate.redirectMainContentFunction
+    if urlstate.params:
+        params = urlstate.params
+    print 'params: ', params
+
+    if params:
+        sendparams = params[1]
+    else:
+        sendparams = ''
+
+    from django.utils import simplejson
+    jsonparams = simplejson.dumps(sendparams)
+    #print 'calling render with mcf=', mcf
+    #print 'calling render with params=', params
+
+    return render_mako('index.mako', 
+                        APP_SECURE_URL = siteurl(request),
+                        username = request.user.username,
+                        mainContentFunction = mcf,
+                        wh = django.utils.webhelpers,
+                        params = jsonparams 
+                      )
 

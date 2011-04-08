@@ -40,5 +40,5 @@ if settings.DEBUG:
     )
     #default view
 urlpatterns += patterns('', 
-    (r'^(?P<cruft>.*)$', 'madas.quote.views.serveIndex', {'SSL':True}),
+    (r'^', 'madas.login.views.serveIndex', {'SSL':True}),
     )
