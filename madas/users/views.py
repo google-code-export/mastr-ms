@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
 from madas.users.MAUser import *
-from madas.users.MAUser import _translate_ldap_to_madas 
+from madas.users.MAUser import _translate_ldap_to_madas, _translate_madas_to_ldap 
 from madas.utils.data_utils import jsonResponse, makeJsonFriendly
 from madas.utils.mail_functions import sendAccountModificationEmail
 
@@ -116,7 +116,7 @@ def _usersave(request, username, admin=False):
    
     #Any fields that were passed through as empty should be refilled with their old values, if possible
     #i.e. if the user existed.
-    previous_details = _userload(u)
+    previous_details = loadMadasUser(u)
     previous_details = _translate_madas_to_ldap(previous_details)
     
     #print 'Previous: '
@@ -127,7 +127,7 @@ def _usersave(request, username, admin=False):
             updateDict[field] = previous_details.get(field, '')
 
     import utils
-    groups = get_madas_user_groups(u, False)
+    groups = getMadasUserGroups(u, False)
     oldstatus = []
     #sanitise the format of 'groups' - we dont want the statuses.
     if len(groups) > 0:
@@ -140,7 +140,7 @@ def _usersave(request, username, admin=False):
         groups = groups['groups']
     else:
         groups = []
-    oldnodes = getNodeMemberships(groups)
+    oldnodes = getMadasNodeMemberships(groups)
     oldnode = []
     if len(oldnodes) > 0:
         oldnode = [oldnodes[0]] #only allow one 'oldnode'
@@ -149,7 +149,7 @@ def _usersave(request, username, admin=False):
 
     print 'Groups is: ', groups
     print 'Nodes is: ', oldnode
-    print 'User Groups is: ', get_madas_user_groups(u, False)
+    print 'User Groups is: ', getMadasUserGroups(u, False)
     print 'Node is ', node
 
     #don't let a non-admin change their node
