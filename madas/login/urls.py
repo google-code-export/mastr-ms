@@ -2,7 +2,7 @@ from django.conf.urls.defaults import *
 
 urlpatterns = patterns(
     '',
-    (r'^processLogin', 'madas.login.views.login', {'SSL':True}),
+    (r'^processLogin', 'madas.login.views.processLoginView', {'SSL':True}),
     (r'^processLogout', 'madas.login.views.processLogout', {'SSL':True}),
     (r'^processForgotPassword', 'madas.login.views.processForgotPassword', {'SSL':True}),
     (r'^populateResetPasswordForm', 'madas.login.views.populateResetPasswordForm', {'SSL':True}),
