@@ -1,5 +1,5 @@
-from madas.utils.data_utils import jsonResponse
-
+from madas.utils.data_utils import jsonResponse, jsonErrorResponse
+from madas.users.MAUser import loadMadasUser
 
 def submit(request, *args):
     '''This adds a new user into ldap with no groups
@@ -7,9 +7,9 @@ def submit(request, *args):
     print '*** registration/submit ***' 
 
     import madas.users 
-    from madas.users.views import _usersave, _userload
+    from madas.users.views import _usersave
     
-    if {} == _userload(request.REQUEST['email']):
+    if {} == loadMadasUser(request.REQUEST['email']):
         oldstatus, status =  _usersave(request, request.REQUEST['email'], admin=False)
         
         #HACK, save again to try to put the password in
@@ -19,11 +19,7 @@ def submit(request, *args):
         
         sendRegistrationToAdminEmail(request, 'trac-nema@ccg.murdoch.edu.au')
         
-        #setRequestVars(request, success=True, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='login')
-        return jsonResponse(request, [], mainContentFunction='login')
+        return jsonResponse(request)
     else:
-        #setRequestVars(request, success=False, data = None, totalRows = 0, authenticated = True, authorized = True, mainContentFunction='error:existingRegistration')
-
-        # TODO error type in mainContentFunction ??? WTF?
-        return jsonResponse( success=False, mainContentFunction='error:existingRegistration')
+        return jsonErrorResponse('User already exists')
     print '*** registration/submit end ***' 
