@@ -1,18 +1,19 @@
 # Create your views here.
 from django.contrib.auth.ldap_helper import LDAPHandler
-from madas.utils.data_utils import jsonResponse, translate_dict, makeJsonFriendly
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson
-from MAUser import MAUser, getCurrentUser
-from settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
+from madas.users.MAUser import *
+from madas.users.MAUser import _translate_ldap_to_madas 
+from madas.utils.data_utils import jsonResponse, makeJsonFriendly
+from madas.utils.mail_functions import sendAccountModificationEmail
 
 ##The user info view, which sends the state of the logged in
 ##user to the frontend.
 def userinfo(request):
-    m = MAUser()
-    m.refresh(request)
+    m = getCurrentUser(request)
+    m.refresh()
     return HttpResponse(m.toJson())
 
 
@@ -30,8 +31,7 @@ def listAllNodes(request, *args):
     If request.REQUEST has 'ignoreNone', we do not do this.
     "" 
     '''
-    ldaphandler = LDAPHandler()
-    ldapgroups = ldaphandler.ldap_list_groups()
+    ldapgroups = getMadasGroups()
     groups = []
     if not request.REQUEST.has_key('ignoreNone'):
         groups.append({'name':'Don\'t Know', 'submitValue':''})
@@ -42,135 +42,6 @@ def listAllNodes(request, *args):
             groups.append({'name':groupname, 'submitValue':groupname})
     return jsonResponse(items=groups)
 
-#def listRestrictedGroups(request, *args):
-#    print '*** list Restricted Groups : enter ***'
-#    g = getCurrentUser(request).CachedGroups
-#    if 'Administrators' in g:
-#        retval = listAllNodes(request)
-#    else:
-#        from madas.users.views import getNodeMemberships
-#        n = getNodeMemberships(g)
-#        print 'NodeMemberships: ', n
-#        groups = []
-#        
-#        for groupname in n:
-#
-#            #Cull out the admin groups and the status groups
-#            if groupname not in MADAS_STATUS_GROUPS and groupname not in MADAS_ADMIN_GROUPS:
-#                d = {'name':groupname, 'submitValue':groupname}
-#                groups.append(d) 
-#            
-#            groups.append({'name':'Don\'t Know', 'submitValue':''})
-#        
-#        retval = jsonResponse(items=groups)
-#    print '*** list Restricted Groups : exit ***'
-#    return retval 
-
-
-
-def _translate_madas_to_ldap(mdict):
-    retdict = translate_dict(mdict, [('username', 'uid'), \
-                           ('commonname', 'commonName'), \
-                           ('firstname', 'givenName'), \
-                           ('lastname', 'sn'), \
-                           ('email', 'mail'), \
-                           ('telephoneNumber', 'telephoneNumber'), \
-                           ('homephone', 'homePhone'), \
-                           ('physicalDeliveryOfficeName', 'physicalDeliveryOfficeName'), \
-                           ('title', 'title'), \
-                           ('dept', 'destinationIndicator'), \
-                           ('areaOfInterest', 'description'), \
-                           ('address', 'postalAddress'), \
-                           ('institute', 'businessCategory'), \
-                           ('supervisor', 'registeredAddress'), \
-                           ('country', 'carLicense'), \
-                            ])
-    return retdict
-
-
-def _translate_ldap_to_madas(ldict):
-    retdict = translate_dict(ldict, [('uid', 'username'), \
-                           ('commonName', 'commonname'), \
-                           ('givenName', 'firstname'), \
-                           ('sn', 'lastname'), \
-                           ('mail', 'email'), \
-                           ('telephoneNumber', 'telephoneNumber'), \
-                           ('homePhone', 'homephone'), \
-                           ('physicalDeliveryOfficeName', 'physicalDeliveryOfficeName'), \
-                           ('title', 'title'), \
-                           ('destinationIndicator', 'dept'), \
-                           ('description', 'areaOfInterest'), \
-                           ('postalAddress', 'address'), \
-                           ('businessCategory', 'institute'), \
-                           ('registeredAddress', 'supervisor'), \
-                           ('carLicense', 'country'), \
-                            ])
-    return retdict
-
-
-def _userload(username):
-    'takes a username, returns a dictionary of results'
-    'returns empty dict if the user doesnt exist'
-    ld = LDAPHandler()
-    r = ld.ldap_get_user_details(username)
-
-    if len(r) == 0:
-        return {}
-
-    #Now we do some app specific key renaming
-    #for key in r.keys():
-    #    print '\t', key, ':', r[key]    
-
-    d = _translate_ldap_to_madas(r) 
-    d = _stripArrays(d)
-    d['originalEmail'] = d['email']
-
-    #groups
-    try:
-        g = get_madas_user_groups(username, False)
-        #substitute 'Active' for 'User' for visual purposes
-        l = g['status']
-        for index, s in enumerate(l):
-            if l[index] == 'User':
-                l[index] = 'Active'
-        #repackage 'groups' as 'node'
-        gr = g['groups']
-        nodes = getNodeMemberships(gr)
-        #print 'userload: nodes are:', nodes
-        if len(nodes) > 0:
-            d['node'] = nodes[0]
-        else:
-            d['node'] = '' #TODO: should this be 'don't know? or something...perhaps 'None'
-
-        #isadmin, isnoderep
-        #these are used for the initial values of checkboxes.
-        if 'Administrators' in gr:
-            d['isAdmin'] = True
-        else:
-            d['isAdmin'] = False
-        if 'Node Reps' in gr:
-            d['isNodeRep'] = True
-        else:
-            d['isNodeRep'] = False
-        if len(gr) == 0:
-            d['isClient'] = True
-        else:
-            d['isClient'] = False
-        
-        d.update(g)
-    except Exception, e:
-        print '\tEXCEPTION: get madas user group failed: ', str(e)
-
-    try:
-        d['status'] = d['status'][0]
-    except:
-        pass
-
-    if isinstance(d['groups'], list) and len(d['groups']) > 0:
-        d['groups'] = d['groups'][0]
-
-
-    return d
     
 
 #Use view decorator here
@@ -180,36 +51,13 @@ def userload(request, *args):
        clicks on the User button in the dashboard and selects 'My Account'
        Accessible by any logged in user
     '''
-    print '***userload : enter ***' 
+    logger.debug('***userload : enter ***')
     u = request.REQUEST.get('username', request.user.username)
-
-    d = [_userload(u)]
-
+    d = [loadMadasUser(u)]
     d = makeJsonFriendly(d)
-    print '***userload : exit ***' 
+    logger.debug('***userload : exit ***') 
     return jsonResponse(data=d)   
 
-
-
-
-from madas.settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-def get_madas_user_groups(username, include_status_groups = False):
-    ld = LDAPHandler()
-    a = ld.ldap_get_user_groups(username)
-    groups = []
-    status = []
-    
-    if a:
-        for name in a:
-            if include_status_groups or name not in MADAS_STATUS_GROUPS:
-                groups.append(name)
-
-            #set the status group (even if being shown in 'groups')
-            if name in MADAS_STATUS_GROUPS:
-                status.append(name)
-             
-    return {'groups': groups, 'status': status}
-	
 def _usersave(request, username, admin=False):
     ''' Saves user details, from a form.
     Uses the form details from the request, but and the supplied username.
@@ -318,7 +166,6 @@ def _usersave(request, username, admin=False):
 
     #We dont actually permit the user to modify their email address at the moment for security purposes.
     #Get an admin connection to LDAP
-    from madas import settings
     ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
     r = None
     try:
@@ -424,34 +271,17 @@ def userSave(request, *args):
        changes some details, and hits 'save'
        Accessible by any logged in user
     '''
-    print '***users/userSave : enter ***' 
+    logger.debug('***users/userSave : enter ***' )
 
     u = request.user.username
     returnval = _usersave(request,u)
 
-    from mail_functions import sendAccountModificationEmail
     sendAccountModificationEmail(request, u)
 
-    print '***users/userSave : exit ***' 
+    logger.debug('***users/userSave : exit ***') 
     return jsonResponse(mainContentFunction='user:myaccount')
 
-def getNodeMemberships(groups):
-    if groups is None:
-        return []
-
-    print '\tusers/getNodeMemberships'
-    from madas.settings import MADAS_STATUS_GROUPS, MADAS_ADMIN_GROUPS
-    specialNodes = MADAS_STATUS_GROUPS + MADAS_ADMIN_GROUPS
-    #TODO get groups from 'credentials' - cached in MadasUser
-    #for now, using groups that are passed in
-    print '\tgroups', groups 
-    i = [item for item in groups if not item in specialNodes]
-    print '\tgetNodeMemberships returning ' , i
-    return i
 
 
-def _stripArrays(d):
-    for key in d:
-        if isinstance(d[key], list):
-            d[key] = d[key][0]
-    return d
+
+

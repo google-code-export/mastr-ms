@@ -7,7 +7,7 @@ from appsettings.default_prod import *
 from appsettings.mastrms.prod import *
 
 
-LOGS = ['mdatasync_server_log']
+LOGS = ['mdatasync_server_log', 'madas_log']
 
 # Defaults
 #LOGIN_URL
@@ -25,12 +25,6 @@ INSTALLED_APPS.extend( [
     'madas.admin',
     'madas.repository'
 ] )
-
-MADAS_USER_GROUP = 'User'
-MADAS_STATUS_GROUPS = [MADAS_USER_GROUP, 'Pending', 'Deleted', 'Rejected']
-MADAS_ADMIN_GROUP = 'Administrators'
-MADAS_NODEREP_GROUP = 'Node Reps'
-MADAS_ADMIN_GROUPS = [MADAS_ADMIN_GROUP, MADAS_NODEREP_GROUP]
 
 AUTHENTICATION_BACKENDS = [
  'madas.repository.backend.MadasBackend',

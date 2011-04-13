@@ -1,4 +1,6 @@
 import datetime
+import os
+import zipfile
 from decimal import Decimal
 from django.core.serializers.json import DateTimeAwareJSONEncoder
 from django.db.models import Model
@@ -265,61 +267,9 @@ def jsonResponse(success=True, data={}, items=None, mainContentFunction=None, pa
     if mainContentFunction:
         retval['mainContentFunction'] = mainContentFunction
 
-    print 'jsonResponse Encoding data'
     retdata = json.dumps(retval)
-    print 'jsonResponse Returning data'
     return HttpResponse(retdata)
-    '''
-    #print 'Using jsonResponse'
-    s = request.session.get('store', {} )
-    a = {}
-    a['success'] =          get_var(s, 'success', True)
-    a['data'] =             get_var(s, 'data', None)
-    a['totalRows'] =        get_var(s, 'totalRows', 0)
-    a['authenticated'] =    get_var(s, 'authenticated', 0)
-    a['authorized'] =       get_var(s, 'authorized', 0)
-    a['user_id'] =          request.user.id
-    a['username'] =         request.user.username
-    a['user'] =             get_var(s, 'user', {})
-    #TODO: This isnt quite right. admin != node rep, node rep != admin
 
-
-    a['isAdmin'] = request.session.get('isAdmin', False)
-    a['isNodeRep'] = request.session.get('isNodeRep', False)
-    a['isClient'] = request.session.get('isClient', False)
-
-    #### response 'items' ####    
-    resp = {}
-    resp['value'] = {}
-    i = get_var(s, 'items', None)
-    if i is not None:
-        #print 'Making friendly: ', i
-        #print dir(i)
-        makeJsonFriendly(i)
-
-    resp['value']['items'] = i #i 
-    resp['value']['total_count'] = a['totalRows']
-    resp['value']['version'] = 1 #TODO: work out where this comes from.
-    a['response'] = resp 
-    ###############################
-
-    ### Data ###
-    data = get_var(s, 'data', None) 
-    if data is not None:
-        a['data'] = makeJsonFriendly(data)
-
-
-    a['mainContentFunction'] = get_var(s, 'mainContentFunction', '')
-    a['params'] = json_decode(s.get('params', ''))
-    retdata = json_encode(a)
-    
-    request.session['store'] = {}
-    
-    return HttpResponse(retdata)
-    '''
-
-import os
-import zipfile
 
 def zipdir(dirPath=None, zipFilePath=None, includeDirInZip=True):
 
