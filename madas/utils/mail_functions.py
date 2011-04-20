@@ -3,6 +3,7 @@ from appsettings.mastrms.prod import RETURN_EMAIL
 from django.utils.webhelpers import siteurl
 from django.core.mail import EmailMessage
 from django.contrib import logging
+from madas.users.MAUser import MADAS_USER_GROUP
 
 logger = logging.getLogger('madas_log')
 
@@ -118,6 +119,8 @@ def sendAccountModificationEmail(request, toemail, fromemail = RETURN_EMAIL):
 
 
 def sendApprovedRejectedEmail(request, toemail, status, fromemail=RETURN_EMAIL):
+    if status == MADAS_USER_GROUP:
+        status = 'Approved'
     subject = 'Madas Account ' + status
     body = 'Your Madas account was ' + status + '\r\n\r\n'
    

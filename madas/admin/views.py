@@ -14,6 +14,7 @@ from madas.quote.models import Quoterequest, Formalquote, Organisation, UserOrga
 from madas.repository.json_util import makeJsonFriendly
 from madas.decorators import admins_only, admins_or_nodereps
 from madas.users.MAUser import * #All the MAUser functions, plus the groups information 
+from madas.utils.mail_functions import sendApprovedRejectedEmail, sendAccountModificationEmail
 
 logger = logging.getLogger('madas_log')
 
@@ -124,33 +125,29 @@ def user_save(request, *args):
        Accessible by Administrators, Node Reps
     '''
     logger.debug('***admin/user_save : enter ***') 
-    import madas.users 
-    from madas.users.views import _usersave
-    oldstatus, status =  _usersave(request, request.REQUEST['email'], admin=True)
+    currentuser = getCurrentUser(request)
+    parsedform = getDetailsFromRequest(request)
+    #look up the user they are editing:
+    existingUser = getMadasUser(parsedform['username'])
+    existingstatus = existingUser.StatusGroup 
+    success = saveMadasUser(currentuser, parsedform['username'], parsedform['details'], parsedform['status'], parsedform['password'])
+    existingUser.refresh()
+    newstatus = existingUser.StatusGroup
 
-    #oldstatus is a list. Even though people should only have one status, if there
-    #is ever an error state where they do somehow end up in two states (or 0) it is easier
-    #to leave oldstatus as a list and use a foreach than it is to test lengths and do a bunch
-    #of dereferencing. By rights, oldstatus should only contain one element though.
-    if status not in oldstatus:
-        logger.debug('\toldstatus (%s) was not equal to status (%s)' % (oldstatus, status) )
-        from mail_functions import sendApprovedRejectedEmail, sendAccountModificationEmail
-        if status == 'User':
-            status = 'Approved' #transform status name
-        if status == 'Approved' or status == 'Rejected':
-            sendApprovedRejectedEmail(request, request.REQUEST['email'], status)
+    if newstatus != existingstatus:
+        if newstatus == MADAS_USER_GROUP or newstatus == MADAS_REJECTED_GROUP:
+            #email to usernames works since usernames are email addresses
+            sendApprovedRejectedEmail(request, parsedform['username'], newstatus)
         else:
-            sendAccountModificationEmail(request, request.REQUEST['email'])
-        
-
+            sendAccountModificationEmail(request, parsedform['username'])
     #do something based on 'status' (either '' or something new)
     nextview = 'admin:usersearch'
-    if status != '':
-        if status == 'Pending':
+    if newstatus != '':
+        if newstatus == MADAS_PENDING_GROUP:
             nextview = 'admin:adminrequests'
-        elif status == 'Rejected':
+        elif newstatus == MADAS_REJECTED_GROUP:
             nextview = 'admin:rejectedUsersearch'
-        elif status == 'Deleted':
+        elif newstatus == MADAS_DELETED_GROUP:
             nextview = 'admin:deletedUsersearch'
 
     #apply organisational changes
@@ -231,14 +228,13 @@ def node_delete(request, *args):
 @admins_or_nodereps
 def org_save(request):
 
-    args = request.REQUEST
+    org_id = request.REQUEST.get('id', None)
 
-    org_id = args['id']
-
-    if org_id == '0':
-        org = Organisation()
-    else:
-        org = Organisation.objects.get(id=org_id)
+    if org_id is not None and org_id != '':
+        if org_id == '0':
+            org = Organisation()
+        else:
+            org = Organisation.objects.get(id=org_id)
         
     org.name = args['name']
     org.abn = args['abn']
