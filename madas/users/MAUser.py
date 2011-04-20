@@ -2,6 +2,7 @@ from django.utils import simplejson
 from django.contrib.auth.ldap_helper import LDAPHandler
 from django.contrib import logging
 from madas.utils.data_utils import translate_dict, makeJsonFriendly
+from madas import settings #for ldap admin username/password
 
 MADAS_USER_GROUP = 'User'
 MADAS_PENDING_GROUP = 'Pending'
@@ -69,7 +70,7 @@ class MAUser(object):
     
     @property
     def StatusGroup(self):
-        return self._dict.get('StatusGroup', [])
+        return self._dict.get('StatusGroup', None)
     @StatusGroup.setter
     def StatusGroup(self, value):
         if isinstance(value, list):
@@ -212,13 +213,13 @@ def getMadasUserDetails(username):
     #ldap often returns them that way
     def _stripArrays(inputdict):
         for key in inputdict.keys():
-            if isinstance(inputdict[key], list):
+            if isinstance(inputdict[key], list) and len(inputdict[key]) > 0:
                 inputdict[key] = inputdict[key][0]
         return inputdict
     d = _stripArrays(d)
     return _translate_ldap_to_madas(d)
 
-def _translate_madas_to_ldap(mdict):
+def _translate_madas_to_ldap(mdict, createEmpty=False):
     retdict = translate_dict(mdict, [('username', 'uid'), \
                            ('commonname', 'commonName'), \
                            ('firstname', 'givenName'), \
@@ -234,11 +235,11 @@ def _translate_madas_to_ldap(mdict):
                            ('institute', 'businessCategory'), \
                            ('supervisor', 'registeredAddress'), \
                            ('country', 'carLicense'), \
-                            ])
+                            ], createEmpty=createEmpty)
     return retdict
 
 
-def _translate_ldap_to_madas(ldict):
+def _translate_ldap_to_madas(ldict, createEmpty=False):
     retdict = translate_dict(ldict, [('uid', 'username'), \
                            ('commonName', 'commonname'), \
                            ('givenName', 'firstname'), \
@@ -254,7 +255,7 @@ def _translate_ldap_to_madas(ldict):
                            ('businessCategory', 'institute'), \
                            ('registeredAddress', 'supervisor'), \
                            ('carLicense', 'country'), \
-                            ])
+                            ], createEmpty=createEmpty)
     return retdict
 
 def loadMadasUser(username):
@@ -296,4 +297,176 @@ def loadMadasUser(username):
         details['groups'] = details['node']
 
     return details  
+
+def addMadasUser(username, detailsdict):
+    ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD) #need an admin connection
+
+    #create an empty dict with the ldap format
+    emptydetails = _translate_madas_to_ldap({}, createEmpty=True)
+    #combine in the details dict
+    new_details = dict(emptydetails, **detailsdict)
+
+    objectclasses = 'inetorgperson'
+    usercontainer = 'ou=NEMA'
+    userdn = 'ou=People'
+    basedn = 'dc=ccg,dc=murdoch,dc=edu,dc=au'
+    success = ld.ldap_add_user(username, detailsdict, objectclasses=objectclasses, usercontainer=usercontainer, userdn=userdn, basedn=basedn)
+    if success:
+        success = ld.ldap_add_user_to_group(username, MADAS_PENDING_GROUP)
+        if not success:
+            raise Exception, 'Could not add user %s to group %s' % (username, MADAS_PENDING_GROUP) 
+    else:
+        raise Exception, 'Could not add user %s' % (username)
+        
+    return success
+
+def updateMadasUserDetails(currentUser, username, password, detailsdict):
+    success = False
+    #The only people who can edit a record is an admin, or the actual user
+    if currentUser.IsAdmin or currentUser.Username == username:
+        try:
+            ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
+            #pass username twice, as the old and new username (so we don't allow changing username
+            ld.ldap_update_user(username, username, password, detailsdict, pwencoding='md5')
+            success = True
+        except Exception, e:
+            logger.warning("Could not update user %s: %s" % (username, str(e)) )
+        
+    return success
+
+def addMadasUserToGroup(currentUser, existingUser, groupname):
+    if currentUser.IsAdmin:
+        ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
+        #add them to the group as long as they arent already in it
+        if groupname not in existingUser.CachedGroups:
+            ld.ldap_add_user_to_group(existingUser.Username, groupname)
+
+def removeMadasUserFromGroup(currentUser, existingUser, groupname):
+    if currentUser.IsAdmin:
+        ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
+        #if they are an admin, dont let them unadmin themselves 
+        if existingUser.Username == currentUser.Username and groupname == MADAS_ADMIN_GROUP:
+            pass
+        else:    
+            #remove them from the group as long as they are in it.
+            if groupname in existingUser.CachedGroups:
+                ld.ldap_remove_user_from_group(existingUser.Username, groupname)
+
+    
+
+def saveMadasUser(currentUser, username, changeddetails, changedstatus, password):
+    ''' 
+        the current user is the currently logged in madas user
+        the username is the username of the person being edited
+        changeddetails is a dict containing only the changed details
+        changedstatus is a dict containing {admin:bool, noderep:bool, node:str, status:str}
+    '''
+    #load the existing user
+    existing_user = getMadasUser(username)
+    success = True 
+    
+    #If the user doesn't exist yet, add them first.
+    if existing_user.CachedDetails == {}:
+        logger.debug("Adding new user %s" % (username))
+        success = addMadasUser(username, changeddetails)
+        if success:
+            existing_user = getMadasUser(username)
+    
+    if success:
+        #translate their details to ldap
+        existing_details = _translate_madas_to_ldap(existing_user.CachedDetails)
+        #combine the dictionaries, overriding existing_details with changeddetails
+        new_details = dict(existing_details, **changeddetails)
+        success = updateMadasUserDetails(currentUser, username, password, new_details)
+    
+    if success:
+        if changedstatus['admin']:
+            addMadasUserToGroup(currentUser, existing_user, MADAS_ADMIN_GROUP)
+        if changedstatus['noderep']:
+            addMadasUserToGroup(currentUser, existing_user, MADAS_NODEREP_GROUP)
+        
+        #node
+        oldnodes = existing_user.Nodes
+        newnode = changedstatus.get('node', None)
+        if newnode is not None and newnode not in oldnodes: 
+            if len(oldnodes) > 0:
+                #remove them from the old node:
+                removeMadasUserFromGroup(currentUser, existing_user, oldnodes[0])
+            addMadasUserToGroup(currentUser, existing_user, newnode)
+        
+        #status
+        oldstatus = existing_user.StatusGroup
+        newstatus = changedstatus.get('status', None)
+        oldstatus = existing_user.StatusGroup
+        if newstatus is not None and newstatus != oldstatus:
+            if oldstatus is not None:
+                removeMadasUserFromGroup(currentUser, existing_user, oldstatus)
+            addMadasUserToGroup(currentUser, existing_user, newstatus)
+        
+    return success                
+
+def getDetailsFromRequest(request):
+    '''This is a generic function for parsing the form data passed in
+       via one of the user edit forms
+       it returns a dictionary with the following format:
+       username: <username supplied in form>
+       password: <password supplied in form>
+       details: <dict of other details as supplied in form>
+       status: <dict of status information (node, admin, noderep etc)
+    '''
+    def getReqVarSTR(key, default=''):
+        return str(request.REQUEST.get(key, default))
+
+    updatedusername = getReqVarSTR('email')
+    updateDict = {}
+    updateDict['mail'] = updatedusername
+    updateDict['telephoneNumber'] = getReqVarSTR('telephoneNumber') 
+    updateDict['physicalDeliveryOfficeName'] =  getReqVarSTR('physicalDeliveryOfficeName')
+    updateDict['title'] = getReqVarSTR('title')
+    updateDict['givenName'] = getReqVarSTR('firstname') 
+    updateDict['sn'] = getReqVarSTR('lastname')
+    updateDict['cn'] = "%s %s" % (updateDict['givenName'], updateDict['sn'])
+    updateDict['homePhone'] = getReqVarSTR('homephone')
+    updateDict['postalAddress'] = getReqVarSTR('address') 
+    updateDict['description'] = getReqVarSTR('areaOfInterest') 
+    updateDict['destinationIndicator'] = getReqVarSTR('dept')
+    updateDict['businessCategory'] = getReqVarSTR('institute') 
+    updateDict['registeredAddress'] = getReqVarSTR('supervisor')
+    updateDict['carLicense'] = getReqVarSTR('country')
+
+    #any that are blank, we delete
+    for key in updateDict.keys():
+        if updateDict[key] == '' or updateDict[key] is None:
+            del updateDict[key]
+
+    statusDict = {}
+    statusDict['admin'] = request.REQUEST.get('isAdmin', None)
+    statusDict['noderep'] = request.REQUEST.get('isNodeRep', None)
+    statusDict['node'] = request.REQUEST.get('node', None)
+    status = request.REQUEST.get('status', None)
+    if status == 'Active':
+        status = MADAS_USER_GROUP
+    statusDict['status'] = status    
+    password = getReqVarSTR('password').strip() #empty password is ignored anyway
+
+    retdict = {}
+    retdict['username'] =  updatedusername
+    retdict['password'] = password 
+    retdict['details'] = updateDict 
+    retdict['status'] = statusDict
    
+    logger.debug('Parsed Form results:')
+    logger.debug('Username: %s', updatedusername)
+    logger.debug('Password: %s', password)
+    logger.debug('Details:')
+    for key in updateDict.keys():
+        logger.debug('%s : %s' % (key, updateDict[key]))
+    logger.debug('Status:')
+    for key in statusDict.keys():
+        logger.debug('%s : %s' % (key, statusDict[key]))
+        
+
+    return retdict       
+                
+    
+

@@ -140,92 +140,22 @@ def uniqueList(l):
 
     return result
 
-
-#def getGroupsForSession(request, force_reload = False):
-#    cachedgroups = request.session.get('cachedgroups', [])
-#    if cachedgroups is [] or force_reload:
-#        print '\tNo cached groups for %s. Fetching.' % (request.user.username)
-#        ld = LDAPHandler()
-#        g = ld.ldap_get_user_groups(request.user.username)
-#        request.session['cachedgroups'] = g
-#        print '\tStored groups for %s: %s' % (request.user.username, request.session.get('cachedgroups') )
-#        cachedgroups = g
-#        
-#        request.session['isNodeRep'] = False
-#        request.session['isAdmin'] = False
-#
-#        if cachedgroups:
-#            request.session['isClient'] = False
-#        
-#            for group in cachedgroups:
-#                if group == 'Administrators':
-#                    request.session['isAdmin'] = True
-#                if group == 'Node Reps':
-#                    request.session['isNodeRep'] = True
-#        
-#            if len(cachedgroups) == 1 and cachedgroups[0] == 'User':        
-#                request.session['isClient'] = True
-#                print 'isClient'
-#
-#    return cachedgroups
-
-
-#def setRequestVars(request, success=False, authenticated = 0, authorized = 0, totalRows = 0, user={}, mainContentFunction = '', username='', params = None, items=None, data=None):
-#    """Make sure we set the session vars the same way each time, with sensible defaults"""
-#    
-#    if params is None:
-#        p = request.REQUEST.get('params', None)
-#        if p is not None:
-#            p = json_decode(p)
-#            print '\tSet Request Vars decoded params as : ', p
-#        params = p
-#    
-#    print '\tSet Request Vars params are ', params
-#
-#    store = {}
-#    store['success']              = success
-#    store['authenticated']        = authenticated
-#    store['authorized']           = authorized
-#    store['totalRows']            = totalRows
-#    store['mainContentFunction']  = mainContentFunction
-#    store['params']               = params
-#    store['user']                 = user
-#    #print 'Setting params. ', params, 'Type was: ', type(request.store['params'])
-#    if items is None:
-#        store['items']            = items
-#    else:
-#        store['items']            = list(items)
-#    #print 'setSessionVars, mainContentFunction is: ', request.store['mainContentFunction'] 
-#    
-#    if data is not None:
-#        store['data'] = data
-#
-#    #set the store on the session
-#    request.session['store'] = store
-
-def get_var(dictionary, key, defaultvalue):
-    if dictionary.has_key(key):
-        v = dictionary[key]
-        #if type(v) is list and len(v) ==1:
-        #    v = v[0] 
-        return v 
-    else:
-        return defaultvalue
-
-def translate_dict(data, tuplelist, includeRest = False):
+def translate_dict(data, tuplelist, includeRest = False, createEmpty=False):
     """takes data (should be a dict) and tuple list (list of tuples)
        for each tuple in the list, if the key (element 1) exists in the dict
        then its value is associated with a new key (element 2) in a new
        dict, which is returned.
        if 'includeRest' is True, any keys not mentioned are transplanted to 
        the new dict 'as is'
+       if 'createNew' is True, if a key in the tuple doesn't exist, then it 
+       is created in the new dict anyway
     """
     returnval = {}
     oldkeylist = []
     for oldkey, newkey in tuplelist:
         oldkeylist.append(oldkey)
-        val = get_var(data, oldkey, 'KEYNOTFOUND!!')
-        if val != 'KEYNOTFOUND!!':
+        val = data.get(oldkey, None)
+        if val != None or createEmpty:
             returnval[newkey] = val
         #otherwise dont bother adding this key, it wasnt in the original data
     if includeRest is True:
