@@ -9,10 +9,10 @@ from django.utils import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.contrib import logging
 
-from madas.utils.data_utils import jsonResponse, json_encode, translate_dict
+from madas.utils.data_utils import jsonResponse, jsonErrorResponse, translate_dict
 from madas.quote.models import Quoterequest, Formalquote, Organisation, UserOrganisation
 from madas.repository.json_util import makeJsonFriendly
-from madas.decorators import admins_only, admins_or_nodereps
+from madas.decorators import admins_only, admins_or_nodereps, privileged_only, authentication_required
 from madas.users.MAUser import * #All the MAUser functions, plus the groups information 
 from madas.utils.mail_functions import sendApprovedRejectedEmail, sendAccountModificationEmail
 
@@ -26,12 +26,12 @@ def _filter_users(groups, requestinguser):
     also in their node'''
 
     retval = []
-    if not requestinguser.IsAdmin and not requestinguser.IsNodeRep:
+    if not requestinguser.IsPrivileged:
         return retval #early exit. Bad data.
     
     
     searchGroups = []
-    if not requestinguser.IsAdmin and requestinguser.IsNodeRep:
+    if not (requestinguser.IsAdmin or requestinguser.IsMastrAdmin) and requestinguser.IsPrivileged:
         searchGroups += requestinguser.Nodes
     
     searchGroups += groups
@@ -68,7 +68,7 @@ def admin_requests(request, *args):
     newlist = _filter_users([MADAS_PENDING_GROUP], currentuser) 
     return jsonResponse(items=newlist)  
 
-@admins_or_nodereps
+@privileged_only
 def user_search(request, *args):
     '''This corresponds to Madas Dashboard->Admin->Active User Search
        Accessible by Administrators, Node Reps
@@ -95,7 +95,7 @@ def deleted_user_search(request, *args):
     newlist = _filter_users([MADAS_DELETED_GROUP], currentuser)
     return jsonResponse(items=newlist) 
 
-@admins_or_nodereps
+@privileged_only
 def user_load(request, *args):
     '''This is called when an admin user opens up an individual user record
        from an admin view e.g. Active User Search
@@ -118,7 +118,7 @@ def user_load(request, *args):
     logger.debug('***admin/user_load : exit ***' )
     return jsonResponse(data=d)
 
-@admins_or_nodereps
+@privileged_only
 def user_save(request, *args):
     '''This is called when an admin user hits save on an individual user record
        from an admin view e.g. Active User Search
@@ -185,16 +185,14 @@ def node_save(request, *args):
    
     returnval = False 
     if oldname!=newname and newname !='':
+        #Group creation/renaming requires an admin auth to ldap.
+        ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
         if oldname == '':
-            #new group
-            #Group creation/renaming requires an admin auth to ldap.
-            ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
             returnval = ld.ldap_add_group(newname)
+            err_msg = "Couldn't add new node: " + newname
         else:
-            #rename
-            #Group creation/renaming requires an admin auth to ldap.
-            ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
             returnval = ld.ldap_rename_group(oldname, newname)
+            err_msg = "Couldn't rename node %s to %s" + (oldname, newname)
     else:
         #make no changes.
         logger.warning("Node save: oldname was newname, or newname was empty. Aborting")
@@ -202,7 +200,10 @@ def node_save(request, *args):
     logger.debug('\tnode_save: returnval was %s' % (str(returnval )))     
     #TODO: the javascript doesnt do anything if returnval is false...it just looks like nothing happens.
     logger.debug( '*** node_save : exit ***' )
-    return jsonResponse(success=returnval, mainContentFunction='admin:nodelist') 
+    if returnval:
+        return jsonResponse(mainContentFunction='admin:nodelist')
+    else:
+        return jsonErrorResponse(err_msg)
 
 @admins_or_nodereps
 def node_delete(request, *args):
@@ -254,7 +255,7 @@ def org_delete(request):
 
     return jsonResponse()
 
-@admins_or_nodereps
+@authentication_required
 def list_organisations(request):
 
     if request.GET:

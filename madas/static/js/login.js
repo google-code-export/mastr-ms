@@ -23,7 +23,11 @@ MA.ResetUser = function()
         IsClient: false,
         IsStaff: false,
         IsLoggedIn: false,
-        Username: ""
+        Username: "",
+        // Mastr MS membership
+        IsMastrAdmin: false,
+        IsProjectLeader: false, 
+        IsMastrStaff: false
     };
 }
 

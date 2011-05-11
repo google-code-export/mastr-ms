@@ -3,6 +3,7 @@ from django.contrib.auth.ldap_helper import LDAPHandler
 from django.contrib import logging
 from madas.utils.data_utils import translate_dict, makeJsonFriendly
 from madas import settings #for ldap admin username/password
+from django.contrib.auth.models import User
 
 MADAS_USER_GROUP = 'User'
 MADAS_PENDING_GROUP = 'Pending'
@@ -11,7 +12,10 @@ MADAS_REJECTED_GROUP = 'Rejected'
 MADAS_STATUS_GROUPS = [MADAS_USER_GROUP, MADAS_PENDING_GROUP, MADAS_DELETED_GROUP, MADAS_REJECTED_GROUP]
 MADAS_ADMIN_GROUP = 'Administrators'
 MADAS_NODEREP_GROUP = 'Node Reps'
-MADAS_ADMIN_GROUPS = [MADAS_ADMIN_GROUP, MADAS_NODEREP_GROUP]
+MASTR_ADMIN_GROUP = 'Mastr Administrators'
+PROJECTLEADER_GROUP = 'Project Leaders'
+MASTR_STAFF_GROUP = 'Mastr Staff'
+MADAS_ADMIN_GROUPS = [MADAS_ADMIN_GROUP, MADAS_NODEREP_GROUP, MASTR_ADMIN_GROUP, PROJECTLEADER_GROUP, MASTR_STAFF_GROUP]
 
 logger = logging.getLogger('madas_log')
 
@@ -21,42 +25,70 @@ class MAUser(object):
         self._dict = {}
         self.Username = username
         self.IsLoggedIn = False
+
     @property 
     def IsAdmin(self):
         return self._dict.get('IsAdmin', False)
     @IsAdmin.setter
     def IsAdmin(self, value):
         self._dict['IsAdmin'] = value
+
     @property 
     def IsNodeRep(self):
         return self._dict.get('IsNodeRep', False)
     @IsNodeRep.setter 
     def IsNodeRep(self, value):
         self._dict['IsNodeRep'] = value
+
     @property 
     def IsClient(self):
         return self._dict.get('IsClient', False)
     @IsClient.setter 
     def IsClient(self, value):
         self._dict['IsClient'] = value
+
     @property 
     def IsStaff(self):
         return self._dict.get('IsStaff', False)
     @IsStaff.setter 
     def IsStaff(self, value):
         self._dict['IsStaff'] = value 
+
     @property 
+    def IsMastrAdmin(self):
+        return self._dict.get('IsMastrAdmin', False)
+    @IsMastrAdmin.setter 
+    def IsMastrAdmin(self, value):
+        self._dict['IsMastrAdmin'] = value 
+
+    @property 
+    def IsProjectLeader(self):
+        return self._dict.get('IsProjectLeader', False)
+    @IsProjectLeader.setter 
+    def IsProjectLeader(self, value):
+        self._dict['IsProjectLeader'] = value 
+
+    @property 
+    def IsMastrStaff(self):
+        return self._dict.get('IsMastrStaff', False)
+    @IsMastrStaff.setter 
+    def IsMastrStaff(self, value):
+        self._dict['IsMastrStaff'] = value 
+
+    @property
     def IsLoggedIn(self):
         return self._dict.get('IsLoggedIn', False)
     @IsLoggedIn.setter 
     def IsLoggedIn(self, value):
         self._dict['IsLoggedIn'] = value
+
     @property 
     def Username(self):
         return self._dict.get('Username', False)
     @Username.setter 
     def Username(self, value):
         self._dict['Username'] = value
+
     @property
     def CachedGroups(self):
         groups = self._dict.get('CachedGroups', None)
@@ -67,6 +99,10 @@ class MAUser(object):
     @CachedGroups.setter
     def CachedGroups(self, value):
         self._dict['CachedGroups'] = value
+
+    @property
+    def IsPrivileged(self):
+        return (self.IsAdmin or self.IsMastrAdmin or self.IsNodeRep or self.IsProjectLeader)
     
     @property
     def StatusGroup(self):
@@ -79,6 +115,7 @@ class MAUser(object):
             else:
                 value = None
         self._dict['StatusGroup'] = value
+
     @property
     def Nodes(self):
         return self._dict.get('Nodes', [])
@@ -117,6 +154,9 @@ class MAUser(object):
         self.IsClient = False
         self.IsNodeRep = False
         self.IsStaff = False
+        self.IsMastrAdmin = False
+        self.IsProjectLeader = False
+        self.IsMastrStaff = False
 
         #Grab groups, forcing a reload. 
         self.refreshCachedGroups()
@@ -127,20 +167,22 @@ class MAUser(object):
             self.IsAdmin = True
         if MADAS_NODEREP_GROUP in self.CachedGroups:
             self.IsNodeRep = True
-            
-        #For 'staff':
-        #They are not an admin
-        #They are not a NodeRep
-        #But they are part of some other group.
-        #Note that all users are part of a 'User' group, so the test is:
-        #!admin and !noderep and numgroups > 1
-        if not self.IsAdmin and not self.IsNodeRep and len(self.CachedGroups) > 1:
+        if MASTR_ADMIN_GROUP in self.CachedGroups:
+            self.IsMastrAdmin = True
+        if PROJECTLEADER_GROUP in self.CachedGroups:
+            self.IsProjectLeader = True
+        if MASTR_STAFF_GROUP in self.CachedGroups:
+            self.IsMastrStaff = True
+
+        if not self.IsPrivileged and self.Nodes:
             self.IsStaff = True
-        elif len(self.CachedGroups) == 1 and MADAS_USER_GROUP in self.CachedGroups:
+
+        if not (self.IsPrivileged or self.IsStaff or self.IsMastrStaff):
             self.IsClient = True
 
     def getData(self):
         return self._dict
+
     def toJson(self):
         return simplejson.dumps(self._dict)
 
@@ -157,7 +199,6 @@ def getCurrentUser(request, force_refresh = False):
     if currentuser.IsLoggedIn != request.user.is_authenticated():
         currentuser.IsLoggedIn = request.user.is_authenticated()
         request.session['mauser'] = currentuser 
-
     
     return request.session['mauser']
 
@@ -165,7 +206,6 @@ def getMadasUser(username):
     mauser = MAUser(username)
     mauser.refresh()
     return mauser
-
 
 #Utility methods
 def getMadasUserGroups(username, include_status_groups = False):
@@ -202,8 +242,8 @@ def getMadasNodeMemberships(groups):
     if groups is None:
         return []
 
-    specialNodes = MADAS_STATUS_GROUPS + MADAS_ADMIN_GROUPS
-    i = [item for item in groups if not item in specialNodes]
+    specialGroups = MADAS_STATUS_GROUPS + MADAS_ADMIN_GROUPS
+    i = [item for item in groups if not item in specialGroups]
     return i
 
 def getMadasUserDetails(username):
@@ -280,6 +320,9 @@ def loadMadasUser(username):
         details['node'] = []
     details['isAdmin'] = user.IsAdmin
     details['isNodeRep'] = user.IsNodeRep
+    details['isMastrAdmin'] = user.IsMastrAdmin
+    details['isProjectLeader'] = user.IsProjectLeader
+    details['isMastrStaff'] = user.IsMastrStaff
     details['isClient'] = user.IsClient
     status = user.StatusGroup
     #This is done because the javascript wants 
@@ -321,38 +364,35 @@ def addMadasUser(username, detailsdict):
     return success
 
 def updateMadasUserDetails(currentUser, username, password, detailsdict):
-    success = False
     #The only people who can edit a record is an admin, or the actual user
-    if currentUser.IsAdmin or currentUser.Username == username:
+    if currentUser.IsAdmin or currentUser.IsMastrAdmin or currentUser.Username == username:
         try:
             ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
             #pass username twice, as the old and new username (so we don't allow changing username
             ld.ldap_update_user(username, username, password, detailsdict, pwencoding='md5')
-            success = True
         except Exception, e:
             logger.warning("Could not update user %s: %s" % (username, str(e)) )
-        
-    return success
+            return False
+     
+    # Only errors will return success False
+    return True
 
-def addMadasUserToGroup(currentUser, existingUser, groupname):
-    if currentUser.IsAdmin:
-        ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
-        #add them to the group as long as they arent already in it
-        if groupname not in existingUser.CachedGroups:
-            ld.ldap_add_user_to_group(existingUser.Username, groupname)
+def addMadasUserToGroup(user, groupname):
+    ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
+    #add them to the group as long as they arent already in it
+    if groupname not in user.CachedGroups:
+        ld.ldap_add_user_to_group(user.Username, groupname)
 
-def removeMadasUserFromGroup(currentUser, existingUser, groupname):
-    if currentUser.IsAdmin:
-        ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
-        #if they are an admin, dont let them unadmin themselves 
-        if existingUser.Username == currentUser.Username and groupname == MADAS_ADMIN_GROUP:
-            pass
-        else:    
-            #remove them from the group as long as they are in it.
-            if groupname in existingUser.CachedGroups:
-                ld.ldap_remove_user_from_group(existingUser.Username, groupname)
+def removeMadasUserFromGroup(user, groupname):
+    ld = LDAPHandler(userdn=settings.LDAPADMINUSERNAME, password=settings.LDAPADMINPASSWORD)
+    #remove them from the group as long as they are in it.
+    if groupname in user.CachedGroups:
+        ld.ldap_remove_user_from_group(user.Username, groupname)
 
-    
+def set_superuser(user, superuser=False):
+    django_user = User.objects.get(username=user.Username)
+    django_user.is_superuser = superuser
+    django_user.save()
 
 def saveMadasUser(currentUser, username, changeddetails, changedstatus, password):
     ''' 
@@ -362,48 +402,79 @@ def saveMadasUser(currentUser, username, changeddetails, changedstatus, password
         changedstatus is a dict containing {admin:bool, noderep:bool, node:str, status:str}
     '''
     #load the existing user
-    existing_user = getMadasUser(username)
-    success = True 
+    existingUser = getMadasUser(username)
     
     #If the user doesn't exist yet, add them first.
-    if existing_user.CachedDetails == {}:
+    if existingUser.CachedDetails == {}:
         logger.debug("Adding new user %s" % (username))
-        success = addMadasUser(username, changeddetails)
-        if success:
-            existing_user = getMadasUser(username)
+        if not addMadasUser(username, changeddetails):
+            return False
+    existingUser = getMadasUser(username)
     
-    if success:
-        #translate their details to ldap
-        existing_details = _translate_madas_to_ldap(existing_user.CachedDetails)
-        #combine the dictionaries, overriding existing_details with changeddetails
-        new_details = dict(existing_details, **changeddetails)
-        success = updateMadasUserDetails(currentUser, username, password, new_details)
-    
-    if success:
+    #translate their details to ldap
+    existing_details = _translate_madas_to_ldap(existingUser.CachedDetails)
+    #combine the dictionaries, overriding existing_details with changeddetails
+    new_details = dict(existing_details, **changeddetails)
+
+    if not updateMadasUserDetails(currentUser, username, password, new_details):
+        return False
+   
+    if currentUser.IsAdmin: 
         if changedstatus['admin']:
-            addMadasUserToGroup(currentUser, existing_user, MADAS_ADMIN_GROUP)
-        if changedstatus['noderep']:
-            addMadasUserToGroup(currentUser, existing_user, MADAS_NODEREP_GROUP)
-        
-        #node
-        oldnodes = existing_user.Nodes
-        newnode = changedstatus.get('node', None)
+            addMadasUserToGroup(existingUser, MADAS_ADMIN_GROUP)
+            set_superuser(existingUser, True)
+        else:
+            #if they are an admin, dont let them unadmin themselves 
+            if existingUser.Username != currentUser.Username:
+                removeMadasUserFromGroup(existingUser, MADAS_ADMIN_GROUP)
+                set_superuser(existingUser, False)
+
+        # Update Node
+        oldnodes = existingUser.Nodes
+        newnode = changedstatus.get('node')
         if newnode is not None and newnode not in oldnodes: 
             if len(oldnodes) > 0:
                 #remove them from the old node:
-                removeMadasUserFromGroup(currentUser, existing_user, oldnodes[0])
-            addMadasUserToGroup(currentUser, existing_user, newnode)
+                removeMadasUserFromGroup(existingUser, oldnodes[0])
+            addMadasUserToGroup(existingUser, newnode)
+ 
+    if currentUser.IsAdmin or (currentUser.IsNodeRep and currentUser.Nodes == existingUser.Nodes):
+        if changedstatus['noderep']:
+            addMadasUserToGroup(existingUser, MADAS_NODEREP_GROUP)
+        else:
+            removeMadasUserFromGroup(existingUser, MADAS_NODEREP_GROUP)
         
-        #status
-        oldstatus = existing_user.StatusGroup
-        newstatus = changedstatus.get('status', None)
-        oldstatus = existing_user.StatusGroup
+        # Status: Pending, Active etc.
+        oldstatus = existingUser.StatusGroup
+        newstatus = changedstatus.get('status')
         if newstatus is not None and newstatus != oldstatus:
             if oldstatus is not None:
-                removeMadasUserFromGroup(currentUser, existing_user, oldstatus)
-            addMadasUserToGroup(currentUser, existing_user, newstatus)
+                removeMadasUserFromGroup(existingUser, oldstatus)
+            addMadasUserToGroup(existingUser, newstatus)
         
-    return success                
+    if currentUser.IsAdmin or currentUser.IsMastrAdmin:
+        if changedstatus['mastradmin']:
+            addMadasUserToGroup(existingUser, MASTR_ADMIN_GROUP)
+            set_superuser(existingUser, True)
+        else:
+            removeMadasUserFromGroup(existingUser, MASTR_ADMIN_GROUP)
+            set_superuser(existingUser, False)
+
+    if (currentUser.IsAdmin or currentUser.IsMastrAdmin or 
+            (currentUser.IsProjectLeader and currentUser.Nodes == existingUser.Nodes)):
+        if changedstatus['projectleader']:
+            addMadasUserToGroup(existingUser, PROJECTLEADER_GROUP)
+        else:
+            removeMadasUserFromGroup(existingUser, PROJECTLEADER_GROUP)
+
+    if (currentUser.IsAdmin or currentUser.IsMastrAdmin or 
+            (currentUser.IsProjectLeader and currentUser.Nodes == existingUser.Nodes)):
+        if changedstatus['mastrstaff']:
+            addMadasUserToGroup(existingUser, MASTR_STAFF_GROUP)
+        else:
+            removeMadasUserFromGroup(existingUser, MASTR_STAFF_GROUP)
+
+    return True                
 
 def getDetailsFromRequest(request):
     '''This is a generic function for parsing the form data passed in
@@ -440,10 +511,13 @@ def getDetailsFromRequest(request):
             del updateDict[key]
 
     statusDict = {}
-    statusDict['admin'] = request.REQUEST.get('isAdmin', None)
-    statusDict['noderep'] = request.REQUEST.get('isNodeRep', None)
-    statusDict['node'] = request.REQUEST.get('node', None)
-    status = request.REQUEST.get('status', None)
+    statusDict['admin'] = request.REQUEST.get('isAdmin')
+    statusDict['noderep'] = request.REQUEST.get('isNodeRep')
+    statusDict['mastradmin'] = request.REQUEST.get('isMastrAdmin')
+    statusDict['projectleader'] = request.REQUEST.get('isProjectLeader')
+    statusDict['mastrstaff'] = request.REQUEST.get('isMastrStaff')
+    statusDict['node'] = request.REQUEST.get('node')
+    status = request.REQUEST.get('status')
     if status == 'Active':
         status = MADAS_USER_GROUP
     statusDict['status'] = status    

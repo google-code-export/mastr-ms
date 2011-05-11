@@ -86,33 +86,40 @@ MA.MenuEnsure = function() {
 }
 
 MA.MenuShow = function() {
-
+    var isPrivileged = (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsMastrAdmin || MA.CurrentUser.IsNodeRep || MA.CurrentUser.IsProjectLeader);
     Ext.BLANK_IMAGE_URL = MA.BaseUrl + 'static/ext-3.3.0/resources/images/default/s.gif';
 
     //disable certain menu items if the user is not an admin
-    if (!MA.CurrentUser.IsAdmin) {
-        Ext.getCmp('admin:nodelist').disable();
-        if (!MA.CurrentUser.IsNodeRep) {
-	        Ext.get('admin').hide();
-            Ext.getCmp('helpadmin:screencasts').disable();
-        }
-        else {
-        	Ext.get('admin').show();
-            Ext.getCmp('helpadmin:screencasts').enable();
-        }
-    } else {
-        Ext.getCmp('admin:nodelist').enable();
+    if (isPrivileged) {
         Ext.get('admin').show();
-        Ext.getCmp('helpadmin:screencasts').enable();
+    } else {
+	    Ext.get('admin').hide();
+
     }
+    Ext.getCmp('admin:nodelist').setDisabled(!MA.CurrentUser.IsAdmin);
+    Ext.getCmp('admin:orglist').setDisabled(!MA.CurrentUser.IsAdmin);
+    Ext.getCmp('helpadmin:screencasts').setDisabled(!MA.CurrentUser.IsAdmin);
+
+    Ext.getCmp('admin:adminrequests').setDisabled(!(MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep));
+    Ext.getCmp('admin:usersearch').setDisabled(!isPrivileged);
+    Ext.getCmp('admin:rejectedUsersearch').setDisabled(!(MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep));
+    Ext.getCmp('admin:deletedUsersearch').setDisabled(!(MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep));
+
+    Ext.getCmp('repo:admin').setDisabled(!(MA.CurrentUser.IsAdmin || MA.CurrentUser.IsMastrAdmin))
+    Ext.getCmp('client:list').setDisabled(!(MA.CurrentUser.IsAdmin || MA.CurrentUser.IsMastrAdmin || MA.CurrentUser.IsProjectLeader))
 
     Ext.get('login').hide();
     Ext.get('dashboard').show();
     Ext.get('userMenu').show();
     Ext.getCmp('quote:list').show();
-    Ext.getCmp('quote:listAll').show();
+    Ext.getCmp('quote:listAll').setDisabled(!(MA.CurrentUser.IsAdmin || MA.CurrentUser.IsNodeRep));
     Ext.getCmp('quote:listFormal').show();
-    Ext.get('repo').show();
+
+    if (MA.CurrentUser.IsAdmin || MA.CurrentUser.IsMastrAdmin || MA.CurrentUser.IsProjectLeader || MA.CurrentUser.IsMastrStaff) {
+        Ext.get('repo').show();
+    } else {
+        Ext.get('repo').hide();
+    }
 
 }
 

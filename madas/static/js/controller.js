@@ -204,18 +204,18 @@ MA.ChangeMainContent = function(contentName, paramArray){
             break;
 
         case "run:list":
-            runListStore.load();
-
-            runListStore.sort([
-                {
-                    field: "state",
-                    direction: "DESC"
-                },
-                {
-                    field: "id",
-                    direction: "DESC"
-                }
-            ]);
+            runListStore.load({callback: function() {
+                runListStore.sort([
+                    {
+                        field: "state",
+                        direction: "DESC"
+                    },
+                    {
+                        field: "id",
+                        direction: "DESC"
+                    }
+                ]);
+            }});
 
             Ext.getCmp("center-panel").layout.setActiveItem("runs-list");
             break;
