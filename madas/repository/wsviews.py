@@ -7,7 +7,7 @@ from madas.quote.models import Organisation, Formalquote
 from django.utils import webhelpers
 from django.contrib.auth.models import User
 from django.utils import simplejson as json
-from django.contrib.admin.views.decorators import staff_member_required
+from madas.decorators import mastr_users_only
 from django.contrib.auth.decorators import login_required
 from django.core import urlresolvers
 from django.db.models import get_model
@@ -18,8 +18,7 @@ from django.db.models import Q
 from datetime import datetime, timedelta
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def create_object(request, model):
     '''
     Allow arbitrary insertion of any data object but requiring certain defaults
@@ -80,8 +79,7 @@ def create_object(request, model):
     return records(request, model, 'id', obj.id)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def create_samples(request):
     # get args and remove the id from it if it exists
     if request.GET:
@@ -103,15 +101,13 @@ def create_samples(request):
     return records(request, 'sample', 'id', obj.id)
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def create_sample_log(request, sample_id, type, description):
     log = SampleLog(type=type,description=description,sample_id=sample_id)
     log.save()
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 @transaction.commit_on_success
 def batch_create_sample_logs(request):
     #get args and remove the id from it if it exists
@@ -130,8 +126,7 @@ def batch_create_sample_logs(request):
     return records(request, 'samplelog', 'id', 0)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def update_object(request, model, id):
     
     if id == '0':
@@ -155,8 +150,7 @@ def update_object(request, model, id):
     return records(request, model, 'id', id)
     
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def delete_object(request, model, id):
 
     if request.GET:
@@ -173,8 +167,7 @@ def delete_object(request, model, id):
     return records(request, model, 'id', id)
     
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def associate_object(request, model, association, parent_id, id):
 
     if request.GET:
@@ -207,8 +200,7 @@ def associate_object(request, model, association, parent_id, id):
     return records(request, model, 'id', parent_id)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def dissociate_object(request, model, association, parent_id, id):
 
     if request.GET:
@@ -234,8 +226,7 @@ def dissociate_object(request, model, association, parent_id, id):
     return records(request, model, 'id', parent_id)
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def records(request, model, field, value):
 
     if request.GET:
@@ -391,8 +382,7 @@ def recent_runs(request):
     return HttpResponse(json.dumps(output))
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recordsClientList(request):
     
     from quote.models import UserOrganisation
@@ -546,8 +536,7 @@ def recordsClientFiles(request):
             return HttpResponse(json.dumps([]))
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def populate_select(request, model=None, key=None, value=None, field=None, match=None):
 
     if request.GET:
@@ -638,8 +627,7 @@ def populate_select(request, model=None, key=None, value=None, field=None, match
         return HttpResponseNotFound(output)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def update_single_source(request, exp_id):
 
     args = request.GET.copy()
@@ -822,8 +810,7 @@ def update_single_source(request, exp_id):
     return HttpResponse(json.dumps(output))
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recreate_sample_classes(request, experiment_id):
 
     if request.GET:
@@ -945,8 +932,7 @@ def recreate_sample_classes(request, experiment_id):
     return recordsSampleClasses(request, experiment_id)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recordsSampleClasses(request, experiment_id):
 
     if request.GET:
@@ -1008,14 +994,12 @@ def recordsSampleClasses(request, experiment_id):
     return HttpResponse(json.dumps(output))
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recordsExperiments(request):
    return recordsExperimentsForProject(request, None)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recordsExperimentsForProject(request, project_id):
 
     if request.GET:
@@ -1081,8 +1065,7 @@ def recordsExperimentsForProject(request, project_id):
     return HttpResponse(json.dumps(output))
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recordsClients(request, *args):
     # basic json that we will fill in
     output = {'metaData': { 'totalProperty': 'results',
@@ -1121,8 +1104,7 @@ def recordsClients(request, *args):
     return HttpResponse(json.dumps(output))
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)    
+@mastr_users_only
 def recordsSamples(request, experiment_id):
 
     if request.GET:
@@ -1177,8 +1159,7 @@ def recordsSamples(request, experiment_id):
     return HttpResponse(json.dumps(output))
     
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def recordsSamplesForClient(request, client):
 
     if request.GET:
@@ -1237,8 +1218,7 @@ def recordsSamplesForClient(request, client):
     return HttpResponse(json.dumps(output))
         
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def moveFile(request):
     
     output = {'success':'', 'newlocation':''}
@@ -1276,8 +1256,7 @@ def moveFile(request):
     return HttpResponse(json.dumps(output))
 
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def experimentFilesList(request):
     
     if request.GET:
@@ -1306,8 +1285,7 @@ def experimentFilesList(request):
     return _fileList(request, exppath, path, True, sharedList)
     
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def runFilesList(request):
     
     if request.GET:
@@ -1335,8 +1313,7 @@ def runFilesList(request):
     return _fileList(request, runpath, path, False, [])
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def pendingFilesList(request):
     
     if request.GET:
@@ -1356,8 +1333,7 @@ def pendingFilesList(request):
     return _fileList(request, basepath, path, False, [])
     
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def _fileList(request, basepath, path, withChecks, sharedList, replacementBasepath = None):
     import os
 
@@ -1412,8 +1388,7 @@ def _fileList(request, basepath, path, withChecks, sharedList, replacementBasepa
         
     return HttpResponse(json.dumps(output))
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def shareFile(request, *args):
     print 'shareFile:', str('')
     
@@ -1441,8 +1416,7 @@ def shareFile(request, *args):
     
     return HttpResponse(json.dumps({'success':True}))
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def downloadFile(request, *args):
     print 'downloadFile:', str('')
     
@@ -1476,8 +1450,7 @@ def downloadFile(request, *args):
     response['Content-Length'] = os.path.getsize(filename)
     return response 
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def downloadSOPFile(request, sop_id):
     print 'downloadSOPFile:', str('')
     
@@ -1581,8 +1554,7 @@ def downloadRunFile(request):
 
 
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def uploadFile(request):
 
     args = request.POST
@@ -1646,8 +1618,7 @@ def _handle_uploaded_file(f, name, experiment_id):
     return retval
     
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def uploadCSVFile(request):
 
     if request.GET:
@@ -1694,8 +1665,7 @@ def uploadCSVFile(request):
     
     
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def sample_class_enable(request, id):
     
     if request.GET:
@@ -1715,8 +1685,7 @@ def sample_class_enable(request, id):
     return recordsSampleClasses(request, sc.experiment.id)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def generate_worklist(request,run_id):
     
     run = Run.objects.get(id=run_id)
@@ -1730,8 +1699,7 @@ def generate_worklist(request,run_id):
     return HttpResponse(rb.generate(request), content_type="text/plain")
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name="mastaff")) or False)
+@mastr_users_only
 @transaction.commit_on_success
 def mark_run_complete(request, run_id):
     samples = RunSample.objects.filter(run__id=run_id)
@@ -1770,8 +1738,7 @@ def select_widget_json(authenticated=False, authorized=False, main_content_funct
     return json.dumps(output)
 
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def add_samples_to_run(request):
     '''Takes a run_id and a list of sample_ids and adds samples to the run after checking permissions etc.'''
 
@@ -1814,8 +1781,7 @@ def add_samples_to_run(request):
 
     return HttpResponse()
     
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def add_samples_to_class(request):
     '''Takes a run_id and a list of sample_ids and adds samples to the run after checking permissions etc.'''
 
@@ -1855,8 +1821,7 @@ def add_samples_to_class(request):
 
     return HttpResponse()
 
-@staff_member_required
-@user_passes_test(lambda u: (u and u.groups.filter(name='mastaff')) or False)
+@mastr_users_only
 def remove_samples_from_run(request):
     '''Takes a run_id and a list of sample_ids and remove samples from the run after checking permissions etc.'''
 

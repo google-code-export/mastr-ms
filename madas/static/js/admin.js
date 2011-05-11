@@ -332,6 +332,7 @@ MA.DeletedUserSearchInit = function(){
 MA.AdminUserEditInit = function (paramArray) {
     var username = paramArray[0];
     var adminUserEditCmp = Ext.getCmp('adminuseredit-panel');   
+    var user = MA.CurrentUser;
     
     //fetch user details
     adminUserEditCmp.load({url: MA.BaseUrl + 'admin/userload', params: {'username': username}, waitMsg:'Loading'});
@@ -344,14 +345,12 @@ MA.AdminUserEditInit = function (paramArray) {
     //Load the organisation store
     Ext.getCmp('adminUserEditOrganisation').store.load();
 
-    //if user is not an admin, disable certain UI components in the form
-    if (!MA.CurrentUser.IsAdmin) {
-        Ext.getCmp('adminUserEditIsAdmin').disable();
-        Ext.getCmp('adminUserEditNode').disable();
-    } else {
-        Ext.getCmp('adminUserEditIsAdmin').enable();
-        Ext.getCmp('adminUserEditNode').enable();
-    }  
+    Ext.getCmp('adminUserEditIsAdmin').setDisabled(!user.IsAdmin);
+    Ext.getCmp('adminUserEditIsNodeRep').setDisabled(!(user.IsAdmin || user.IsNodeRep));
+    Ext.getCmp('adminUserEditNode').setDisabled(!user.IsAdmin);
+    Ext.getCmp('adminUserEditIsMastrAdmin').setDisabled(!(user.IsAdmin || user.IsMastrAdmin));
+    Ext.getCmp('adminUserEditIsProjectLeader').setDisabled(!(user.IsAdmin || user.IsMastrAdmin || user.isProjectLeader));
+    Ext.getCmp('adminUserEditIsMastrStaff').setDisabled(!(user.IsAdmin || user.IsMastrAdmin || user.isProjectLeader));
     
     //reload the combobox
     if (Ext.StoreMgr.containsKey('adminUserEditNodeDS')) {
@@ -418,6 +417,9 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
                                                      { name: 'homephone', sortType : Ext.data.SortTypes.asText },
                                                      { name: 'isAdmin', sortType : Ext.data.SortTypes.asText },
                                                      { name: 'isNodeRep', sortType : Ext.data.SortTypes.asText },
+                                                     { name: 'isMastrAdmin', sortType : Ext.data.SortTypes.asText },
+                                                     { name: 'isProjectLeader', sortType : Ext.data.SortTypes.asText },
+                                                     { name: 'isMastrStaff', sortType : Ext.data.SortTypes.asText },
                                                      { name: 'node', sortType : Ext.data.SortTypes.asText },
                                                      { name: 'status', sortType : Ext.data.SortTypes.asText },
                                                      { name: 'dept', sortType : Ext.data.SortTypes.asText },
@@ -502,6 +504,24 @@ MA.AdminUserEditCmp = {id:'adminuseredit-container-panel',
                name: 'isNodeRep', 
                inputValue: 'true',
                fieldLabel: 'Node Rep'
+               },{
+               xtype:'checkbox',
+               id: 'adminUserEditIsMastrAdmin',
+               name: 'isMastrAdmin',
+               inputValue: 'true',
+               fieldLabel: 'Mastr Administrator'
+               },{
+               xtype:'checkbox',
+               id: 'adminUserEditIsProjectLeader',
+               name: 'isProjectLeader',
+               inputValue: 'true',
+               fieldLabel: 'Project Leader'
+               },{
+               xtype:'checkbox',
+               id: 'adminUserEditIsMastrStaff',
+               name: 'isMastrStaff',
+               inputValue: 'true',
+               fieldLabel: 'Mastr Staff'
                }, new Ext.form.ComboBox({
                                         fieldLabel: 'Node',
                                         id: 'adminUserEditNode',
@@ -770,7 +790,7 @@ buttons: [
                              }
                              },
                              failure: function (form, action) {
-                             //do nothing special. this gets called on validation failures and server errors
+                                Ext.Msg.alert("Error", action.result.msg);
                              }
                              });
           } }

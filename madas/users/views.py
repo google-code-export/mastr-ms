@@ -12,8 +12,7 @@ from madas.utils.mail_functions import sendAccountModificationEmail
 ##The user info view, which sends the state of the logged in
 ##user to the frontend.
 def userinfo(request):
-    m = getCurrentUser(request)
-    m.refresh()
+    m = getCurrentUser(request, force_refresh = True)
     return HttpResponse(m.toJson())
 
 
