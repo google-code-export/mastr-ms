@@ -3,7 +3,7 @@ import os
 import os.path
 import posixpath, urllib, mimetypes
 import pickle
-from datetime import datetime
+from datetime import datetime, timedelta
 import copy
 from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -72,6 +72,7 @@ class ClientState(object):
         self.organisation = org
         self.sitename = site
         self.station = station
+        self.lastError = ""
 
 
 def get_saved_client_state(org, site, station):
@@ -121,6 +122,8 @@ class FileList(object):
             logger.debug('running checknode')
             self.checknode(filesdict)
 
+        return self.heirarchy
+
     def markfound(self, node, fname, filesdictentry):
         #Mark a file as 'found' (if it isnt a file it will be None)
         node[fname] = filesdictentry[2] #the relative path
@@ -132,8 +135,6 @@ class FileList(object):
     
     def checknode(self, filesdict):
         #if there are files at this node. 
-        #print '\nIn checknode, type of currentnode is: ', type(self.currentnode)
-        #print '\nIn checknode, currentnode is', self.currentnode 
         
         #create a list of uppercase keys to do the comparison with.
         #we always do our comparisons with uppercase, so that they are case insensitive,
@@ -166,28 +167,28 @@ class FileList(object):
         #if the dir is found, mark it as such and do nothing else with it.
         #otherwise, push each unfound dir as a new node on the checknodes 
         #queue
-        for dir in self.currentnode.keys():
-            upperdirname = dir.upper()
+        for dirname in self.currentnode.keys():
+            upperdirname = dirname.upper()
             if upperdirname not in ['.', '/']: #don't check the filelist or 'path' entry
                 logger.debug('checking dir: %s' % (upperdirname.encode('utf-8')) )
                 if upperdirname in filesdict.keys():
                     #set the dir to contain the path, not a node.
-                    self.markfound(self.currentnode, dir, filesdict[upperdirname])
+                    self.markfound(self.currentnode, dirname, filesdict[upperdirname])
                     #rewrite the DB filename to be the supplied one.
                     try:
                         runsampleDBentry =  RunSample.objects.get(id=filesdict[upperdirname][1])
-                        runsampleDBentry.filename = dir
+                        runsampleDBentry.filename = dirname
                         runsampleDBentry.save()
                     except Exception, e:
                         logger.debug('Exception renaming runsample filename: %s' % (str(e)) )
 
                     #remove the found entry from the filesdict
                     del filesdict[upperdirname]
-                    logger.debug( 'Found dir: Setting %s to %s' % ( dir.encode('utf-8'), self.currentnode[dir].encode('utf-8') ))
+                    logger.debug( 'Found dir: Setting %s to %s' % ( dirname.encode('utf-8'), self.currentnode[dirname].encode('utf-8') ))
                 else:
                     #push the dir onto the checknodes.
-                    logger.debug('Could not find dir %s, pushing.' % (dir.encode('utf-8')) )
-                    self.checknodes.append(self.currentnode[dir])
+                    logger.debug('Could not find dir %s, pushing.' % (dirname.encode('utf-8')) )
+                    self.checknodes.append(self.currentnode[dirname])
 
 def jsonResponse(data):
     jdata = simplejson.dumps(data)
@@ -218,14 +219,63 @@ def getNodeClients(request, *args):
 
     return jsonResponse(result)
 
+@login_required
 def nodeinfo(request, organisation="", sitename="", station=""):
     logger.debug("Searching for node org=%s, sitename=%s, station=%s" % (organisation, sitename, station))
-    nodeclient = NodeClient.objects.get(organisation_name = organisation, site_name=sitename, station_name = station)
-    clientstate = get_saved_client_state(organisation, sitename, station)
+    try:
+        nodeclient = NodeClient.objects.get(organisation_name = organisation, site_name=sitename, station_name = station) 
+        if nodeclient is None:
+            raise Exception("No nodeclient existed with organisation=%s, sitename=%s, station=%s" % (organisation, sitename, station))
+        clientstate = get_saved_client_state(organisation, sitename, station)
     #return HttpResponse( simplejson.dumps(nodeclient.__dict__) + simplejson.dumps(clientstate.__dict__) )   
-    return render_to_response("node.mako", {'clientstate': clientstate.__dict__, 'wh':webhelpers} ) 
+        timediff = datetime.now() - datetime.now() 
+        if clientstate.lastSyncAttempt is not None:
+            timediff = datetime.now() - clientstate.lastSyncAttempt
+
+        expectedfiles = getExpectedFilesForNode(nodeclient, include_completed=True)
+        return render_to_response("node.mako", {'nodeclient':nodeclient, 'expectedfiles': expectedfiles, 'timediff': timediff, 'clientstate': clientstate.__dict__, 'wh':webhelpers} ) 
+
+    except Exception, e:
+        return HttpResponse("Could not display node info: %s" % (e))
 
 
+def getExpectedFilesForNode(nodeclient, include_completed = False):
+    incomplete = {}
+    complete = {}
+
+     #now get the runs for that nodeclient
+    runs = Run.objects.filter(machine = nodeclient) 
+    for run in runs:
+        target_dict = incomplete
+        logger.debug('Finding runsamples for run')
+        
+        if (run.state != RUN_STATES.COMPLETE[0]) or ( (run.state == RUN_STATES.COMPLETE[0]) and include_completed):
+            if include_completed and run.state == RUN_STATES.COMPLETE[0]:
+                target_dict = complete
+            
+            runsamples = RunSample.objects.filter(run = run)
+            #Build a filesdict of all the files for these runsamples
+            for rs in runsamples:
+                logger.debug('Getting files for runsamples');
+                #if rs.filename not None or rs.filename not "":
+                #    continue #move to the next record - this one has no filename
+                
+                fname = rs.filename.upper() #Use uppercase filenames as keys.
+                abspath, relpath = rs.filepaths()
+                logger.debug( 'Filename: %s belongs in path %s' % ( fname.encode('utf-8'), abspath.encode('utf-8') ) )
+                if target_dict.has_key(fname):
+                    logger.debug( 'Duplicate path detected!!!' )
+                    error = "%s, %s" % (error, "Duplicate filename detected for %s" % (fname.encode('utf-8')))
+                    status = 2
+                #we use the relative path
+                if not(target_dict.has_key(run.id)):
+                    target_dict[run.id] = {}
+
+                logger.debug("Adding %s to target_dict" % (fname) )
+                target_dict[run.id][fname] = [run.id, rs.id, relpath, os.path.exists(os.path.join(abspath, rs.filename))]
+
+    return {'complete': complete, 'incomplete': incomplete}
+    
 
 def retrievePathsForFiles(request, *args):
     '''This function is called as a webservice by the datasync client.
@@ -264,6 +314,8 @@ def retrievePathsForFiles(request, *args):
     #get the saved client state, so we can update it
     clientstate = get_saved_client_state(porganisation, psitename, pstation)
 
+    filesdict = {}
+
     #filter by client, node, whatever to 
     #get a list of filenames in the repository run samples table
     #to compare against.
@@ -291,7 +343,17 @@ def retrievePathsForFiles(request, *args):
             error = '%s, %s' % (error, 'Unable to resolve ruleset: %s' % (str(e)))
         
         logger.debug('Finding runs for this nodeclient')
+        
         #now get the runs for that nodeclient
+        expectedFiles = getExpectedFilesForNode(nodeclient, include_completed=syncold)
+        #merge complete and incomplete
+        for runid in expectedFiles['incomplete'].keys():
+            logger.debug("INCOMPLETE: adding files for run %d" % (runid) )
+            filesdict.update(expectedFiles['incomplete'][runid])
+        for runid in expectedFiles['complete'].keys():
+            logger.debug("COMPLETE: adding files for run %d" % (runid ))
+            filesdict.update(expectedFiles['complete'][runid])
+        '''
         runs = Run.objects.filter(machine = nodeclient) 
         for run in runs:
             logger.debug('Finding runsamples for run')
@@ -313,18 +375,19 @@ def retrievePathsForFiles(request, *args):
                         status = 2
                     #we use the relative path    
                     filesdict[fname] = [run.id, rs.id, relpath]
-
+        '''
     except Exception, e:
         status = 1
-        logger.debug("exception encountered")
+        logger.debug("exception encountered: %s" % (e))
         error = "%s, %s" % (error, 'Unable to resolve end machine to stored NodeClient: %s' % str(e) )
         
+   
 
     logger.debug('making filelist obj')
     #So. Make a FileList object out of pfiles.
     fl = FileList(pfiles)
     logger.debug('checking files')
-    fl.checkFiles(filesdict)
+    wantedfiles = fl.checkFiles(filesdict)
 
     #set the default host
     if host is None or len(host) == 0:
@@ -332,7 +395,7 @@ def retrievePathsForFiles(request, *args):
 
     retval = {'status': status,
              'error' : error,
-             'filesdict':pfiles,
+             'filesdict':wantedfiles,
              'runsamplesdict' : fl.runsamplesdict,
              'rootdir' : settings.REPO_FILES_ROOT,
              'rules' : rules,
@@ -343,12 +406,25 @@ def retrievePathsForFiles(request, *args):
             }
 
     clientstate.files = pfiles 
-    clientstate.lastSyncAttempt = str(datetime.now()) 
+    clientstate.lastSyncAttempt = datetime.now()
     #save the client state
     save_client_state(clientstate)
 
     logger.debug('RETVAL is %s' % ( retval ) )
     return jsonResponse(retval)
+
+def checkRunSampleFileExists(runsampleid):
+    fileexists = False
+    try:
+        rs = RunSample.objects.get(id=runsampleid)
+        abssamplepath, relsamplepath = rs.filepaths()
+        complete_filename = os.path.join(abssamplepath, rs.filename)
+        fileexists = os.path.exists(complete_filename)
+        logger.debug( 'Checking file %s:%s' % (complete_filename.encode('utf-8'), fileexists) )
+    except Exception, e:
+        logger.debug('Could not check runsample file for runsampleid: %s: %s' % (str(runsampleid), e))
+    
+    return fileexists
 
 def checkRunSampleFiles(request):
     ret = {}
@@ -370,13 +446,7 @@ def checkRunSampleFiles(request):
                 runsample = int(runsample)
                 try:
                     rs = RunSample.objects.get(id = runsample)
-                    abssamplepath, relsamplepath = rs.filepaths()
-                    complete_filename = os.path.join(abssamplepath, rs.filename)
-                    fileexists = os.path.exists(complete_filename)
-                    logger.debug( 'Checking file %s:%s' % (complete_filename.encode('utf-8'), fileexists) )
-                    # now change the value in the DB
-                    logger.debug( 'Changing value in DB')
-                    rs.complete = fileexists
+                    rs.complete = checkRunSampleFileExists(runsample) 
                     rs.save()
                 except Exception, e:
                     logger.debug('Error: %s' % (e) )
@@ -385,6 +455,18 @@ def checkRunSampleFiles(request):
                 
     else:
         ret['description'] = "No files given"
+   
+    logger.debug("POST: %s" % (str(request.POST)) )
+    org = request.POST.get('organisation', None)
+    site = request.POST.get('sitename', None)
+    station = request.POST.get('stationname', None)
+    if (org is not None) and (site is not None) and (station is not None):
+        clientstate = get_saved_client_state(org, site, station)
+        clientstate.lastError = request.POST.get('lastError', "No Error")
+        save_client_state(clientstate)
+        logger.debug("Saved lastError in client state")
+    else:
+        logger.debug("Could not get clientstate details: %s, %s, %s" % (org, site, station))
 
     return jsonResponse(ret)
 
@@ -484,6 +566,7 @@ def utils(request):
 
     #now we proceed as normal.
 
+    nodeclients = NodeClient.objects.all()
     #Screenshots and logs are in the same dir.
     clientlogdir = os.path.join(settings.REPO_FILES_ROOT , 'synclogs')
     fileslist = []
@@ -492,7 +575,6 @@ def utils(request):
     clientlogslist = []
     shotslist = []
     for fname in fileslist:
-        print fname
         if fname.endswith('.png'):
             shotslist.append(fname)
         else:    
@@ -505,7 +587,7 @@ def utils(request):
     currentLogLevel = logger.getEffectiveLevel()
     levelnames = ['Debug', 'Info', 'Warning', 'Critical', 'Fatal']
     levelvalues = [logging.DEBUG, logging.INFO, logging.WARNING, logging.CRITICAL, logging.FATAL]
-    return render_to_response("utils.mako", {'wh':webhelpers, 'serverloglist':serverloglist, 'clientlogslist':clientlogslist, 'shotslist':shotslist, 'currentLogLevel':currentLogLevel, 'levelnames':levelnames, 'levelvalues':levelvalues , 'success':success, 'message':message})
+    return render_to_response("utils.mako", {'wh':webhelpers, 'serverloglist':serverloglist, 'clientlogslist':clientlogslist, 'shotslist':shotslist, 'currentLogLevel':currentLogLevel, 'levelnames':levelnames, 'levelvalues':levelvalues , 'success':success, 'message':message, 'nodeclients': nodeclients})
 
 @login_required
 def tail_log(request, filename=None, linesback=10, since=0):
