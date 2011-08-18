@@ -202,10 +202,12 @@ class MSDataSyncAPI(object):
                relies on external scope to contain 'localindexdir' string
             '''
             for filename in node['.'].keys():
+                outlog.debug("Checking for %s" % (filename))
                 #any keys in . should be valid targets.
                 #their full source path will be ['/'] joined with the 'key'.
                 #theif full dest path will be the 'value'
                 if node['.'][filename] is not None:
+                    outlog.debug("Client: adding file")
                     fulllocalpath = os.path.join(node['/'], filename)
                     fullremotepath = os.path.join(node['.'][filename], filename)
                     resultdict[fulllocalpath] = "%s" %(os.path.join(localindexdir, fullremotepath) )
@@ -215,8 +217,10 @@ class MSDataSyncAPI(object):
                 if dirname not in ['.', '/']:
                     #if the value is a dict, then this dir needs to be more thouroughly explored
                     if isinstance(node[dirname], dict):
+                        outlog.debug("Checking dir %s" % (dirname))
                         extract_file_target(node[dirname], resultdict)
                     else:
+                        outlog.debug("Client: adding dir")
                         fulllocalpath = os.path.join(node['/'], dirname)
                         fullremotepath = os.path.join(node[dirname], dirname)
                         resultdict[fulllocalpath] = "%s" %(os.path.join(localindexdir, fullremotepath) )
@@ -353,6 +357,8 @@ class MSDSImpl(object):
     def __init__(self, log, controller):
        self.log = log #we expect 'log' to be a callable function. 
        self.controller = controller
+       self.lastError = ""
+        
     def perform_rsync(self, sourcedir, rsyncconfig):
         #self.log('checkRsync implementation entered!', Debug=True)
       
@@ -417,6 +423,7 @@ class MSDSImpl(object):
         #    self.log("RSYNC %s: " % (line,), thread=self.controller.useThreading)
         
         (retcode, pstderr) = p.communicate()
+        self.lastError = pstderr
 
         if len(pstderr) > 0:
             self.log('Error Rsyncing: %s' % (str(pstderr),), type=self.log.LOG_ERROR, thread = self.controller.useThreading)
@@ -425,7 +432,8 @@ class MSDSImpl(object):
     
     def serverCheckRunSampleFiles(self, runsampledict, baseurl):
         self.log('Informing the server of transfer: %s' % (runsampledict), thread = self.controller.useThreading)
-        postvars = {'runsamplefiles' : simplejson.dumps(runsampledict) }
+        postvars = {'runsamplefiles' : simplejson.dumps(runsampledict), 'lastError': self.lastError, 'organisation': self.controller.config.getValue('organisation'), 'sitename': self.controller.config.getValue('sitename'), 'stationname': self.controller.config.getValue('stationname') }
+        self.log("Postvars: %s " % (str(postvars)) )
         url = "%s%s/" % (baseurl, "checksamplefiles")
         try:
             f = urllib.urlopen(url, urllib.urlencode(postvars))

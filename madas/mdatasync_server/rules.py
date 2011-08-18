@@ -26,7 +26,6 @@ class FileRule(object):
     def __init__(self, tpattern, action):
         self.tpattern = tpattern
         if action not in ActionType.ValidTypes:
-            print 'Invalid action: ', action
             return None
         else:
             self.action = action
@@ -44,8 +43,8 @@ class NodeConfig(object):
         self.nodes = {}
 
     def AddOrganisation(self, orgname):
-        if self.nodes.has_key(org):
-            print "AddOrganisation: warning: node name already existed."
+        #if self.nodes.has_key(org):
+        #    print "AddOrganisation: warning: node name already existed."
         self.nodes[orgname] = {}
 
     def AddSite(self, orgname, sitename):
@@ -53,8 +52,8 @@ class NodeConfig(object):
             pass #incomplete code, abandoned class
 
     def AddStation(self, orgname, sitename, stationname):
-        if not self.nodes.has_key(nodename):
-            print 'AddStation: warning: needed to create node ', nodename
+        #if not self.nodes.has_key(nodename):
+        #    print 'AddStation: warning: needed to create node ', nodename
         if not self.nodes[nodename].has_key(stationname):
             self.nodes[nodename][stationname] = [] 
 
