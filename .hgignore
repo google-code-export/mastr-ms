@@ -1,0 +1,8 @@
+.*\.pyc$
+^mastrms/virt_mastrms/*
+^mastrms/tmp/*
+^mastrms/fab-tmp/*
+^mastrms/scratch/*
+^mastrms/log/*
+^mastrms/virtualenv*
+^.*appsettings*
