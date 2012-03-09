@@ -90,7 +90,7 @@ DEFAULT_GROUP = 'madas'  #this needs to exist in the database.
 LDAP_DONT_REQUIRE_CERT = True
 
 #Server side directories
-PERSISTENT_FILESTORE = os.path.normpath(os.path.join(PROJECT_DIRECTORY, '..', '..', 'files'))
+PERSISTENT_FILESTORE = os.path.normpath(os.path.join(PROJECT_DIRECTORY, '..', '..', 'files.livecopy'))
 #Ensure the persistent storage dir exits. If it doesn't, exit noisily.
 assert os.path.exists(PERSISTENT_FILESTORE), "This application cannot start: It expects a writeable directory at %s to use as a persistent filestore" % (PERSISTENT_FILESTORE) 
 # for local development, this is set to the static serving directory. For deployment use Apache Alias
