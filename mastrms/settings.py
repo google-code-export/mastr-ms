@@ -10,7 +10,6 @@ if not os.environ.has_key('SCRIPT_NAME'):
     os.environ['SCRIPT_NAME']=''
 
 SCRIPT_NAME =   os.environ['SCRIPT_NAME']
-print 'Evaluating os.environ[PROJECT_DIRECTORY] as ', os.environ['PROJECT_DIRECTORY']
 PROJECT_DIRECTORY = os.environ['PROJECT_DIRECTORY']
 TMP_DIRECTORY = os.path.join(PROJECT_DIRECTORY, 'tmp')
 
