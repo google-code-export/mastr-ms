@@ -1,3 +1,4 @@
+.. _persistent_filestore:
 Persistent Filestore
 ====================
 

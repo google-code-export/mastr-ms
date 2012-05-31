@@ -15,7 +15,6 @@ TMP_DIRECTORY = os.path.join(PROJECT_DIRECTORY, 'tmp')
 
 #general site config
 DEBUG = True
-DEV_SERVER = True
 SITE_ID = 1
 APPEND_SLASH = True
 SSL_ENABLED = True
