@@ -1,0 +1,17 @@
+.*\.pyc$
+.*\.DS_Store
+.*\.log
+^bootstrap*
+^build*
+^mastrms/dist/*
+^mastrms/build/*
+^virt_mastrms*
+^mastrms/tmp/*
+^mastrms/fab-tmp/*
+^mastrms/scratch/*
+^mastrms/log/*
+^mastrms/mdatasync_client/client/build/*
+^mastrms/mdatasync_client/client/dist/*
+^docs/build/*
+^mastrms/django_mastrms.egg-info/*
+^.ccgplatform*
